@@ -1,0 +1,4 @@
+repository "Stranded Skies/Stranded Skies@18967700668970@cloud"
+  path "/"
+    br "/main"
+    co "/main"
