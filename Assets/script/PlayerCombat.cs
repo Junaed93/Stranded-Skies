@@ -33,7 +33,7 @@ public class PlayerCombat : MonoBehaviour
 
     private bool facingRight = true;
 
-    // 🔒 Block
+    // 🔒 Block (TRIGGER – ONE HIT)
     private bool isBlocking = false;
 
     private Vector3 attackPointStartLocalPos;
@@ -54,9 +54,13 @@ public class PlayerCombat : MonoBehaviour
 
         HandleFacingDirection();
 
-        // 🛡️ BLOCK (HOLD RIGHT CLICK)
-        isBlocking = Input.GetMouseButton(1);
-        animator.SetBool("Block", isBlocking);
+        // 🛡️ BLOCK (RIGHT CLICK – TRIGGER)
+        if (Input.GetMouseButtonDown(1))
+        {
+            isBlocking = true;
+            animator.SetTrigger("Block");
+            PlaySound(blockSFX);
+        }
 
         // ⚔️ ATTACK
         if (Input.GetButtonDown("Fire1") && !isAttacking && !isBlocking)
@@ -100,7 +104,6 @@ public class PlayerCombat : MonoBehaviour
         lastAttackTime = Time.time;
         isAttacking = true;
 
-        // 🔊 Sword swing
         PlaySound(swordSwingSFX);
     }
 
@@ -118,8 +121,6 @@ public class PlayerCombat : MonoBehaviour
             if (enemy.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(attackDamage);
-
-                // 🔊 Hit sound ONLY if something is hit
                 PlaySound(swordHitSFX);
             }
         }
@@ -129,6 +130,7 @@ public class PlayerCombat : MonoBehaviour
     public void EndAttack()
     {
         isAttacking = false;
+        isBlocking = false; // 🔓 reset block
 
         if (Time.time - lastAttackTime > comboResetTime)
             comboIndex = 0;
@@ -140,11 +142,10 @@ public class PlayerCombat : MonoBehaviour
     {
         if (isDead) return;
 
-        // 🛡️ BLOCK LOGIC
+        // 🛡️ BLOCK CONSUMES ONE HIT
         if (isBlocking)
         {
-            animator.SetTrigger("BlockHit");
-            PlaySound(blockSFX);
+            isBlocking = false;
             return; // ❌ no damage
         }
 
@@ -170,7 +171,7 @@ public class PlayerCombat : MonoBehaviour
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.velocity = Vector2.zero;
+            rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Static;
         }
     }
