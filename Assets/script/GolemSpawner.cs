@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 public class GolemSpawner : MonoBehaviour
 {
@@ -11,10 +12,18 @@ public class GolemSpawner : MonoBehaviour
 
     public int maxSpawn = 3;
     public int maxAttempts = 30;
-    public float minDistanceBetweenGolems = 3f; // ⭐ KEY FIX
+    public float minDistanceBetweenGolems = 3f;
+
+    public float spawnDelay = 5f; // ⭐ NEW (seconds)
 
     void Start()
     {
+        StartCoroutine(SpawnAfterDelay());
+    }
+
+    IEnumerator SpawnAfterDelay()
+    {
+        yield return new WaitForSeconds(spawnDelay);
         SpawnOnce();
     }
 
@@ -41,14 +50,12 @@ public class GolemSpawner : MonoBehaviour
             if (hit.collider == null)
                 continue;
 
-            // ❌ Block MovingPlatform
             if (hit.collider.gameObject.name.Contains("MovingPlatform"))
                 continue;
 
             Vector2 spawnPos = hit.point;
             spawnPos.y += 0.1f;
 
-            // ❌ Too close to another golem
             bool tooClose = false;
             foreach (Vector2 pos in usedPositions)
             {
@@ -62,7 +69,6 @@ public class GolemSpawner : MonoBehaviour
             if (tooClose)
                 continue;
 
-            // ✅ Spawn
             Instantiate(golemPrefab, spawnPos, Quaternion.identity);
             usedPositions.Add(spawnPos);
         }

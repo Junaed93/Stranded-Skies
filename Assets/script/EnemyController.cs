@@ -1,11 +1,13 @@
 using UnityEngine;
 
-public class EnemyController : MonoBehaviour
+public class EnemyController : MonoBehaviour, IDamageable
 {
+    [Header("Health")]
     public int maxHealth = 100;
     public int currentHealth;
     private bool isDead = false;
 
+    [Header("Components")]
     public Animator animator;
     public Rigidbody2D rb;
     public Collider2D myCollider;
@@ -15,6 +17,7 @@ public class EnemyController : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+    // ✅ CALLED BY PLAYER (via IDamageable)
     public void TakeDamage(int damage)
     {
         if (isDead) return;
@@ -36,12 +39,14 @@ public class EnemyController : MonoBehaviour
         isDead = true;
         animator.SetTrigger("Death");
 
+        // Stop physics
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
+        // Disable collision
         if (myCollider != null)
             myCollider.enabled = false;
 
@@ -54,10 +59,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    // 🔥 Animation Event at END of death animation
+    // 🔥 ANIMATION EVENT (LAST FRAME OF DEATH)
     public void OnDeathAnimationEnd()
     {
-        animator.enabled = false;
         Destroy(gameObject, 0.5f);
     }
 }

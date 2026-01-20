@@ -16,44 +16,97 @@ public class PlayerCombat : MonoBehaviour
     [Header("Combo Settings")]
     public float comboResetTime = 0.9f;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip swordSwingSFX;
+    public AudioClip swordHitSFX;
+    public AudioClip blockSFX;
+
     [Header("Components")]
     public Animator animator;
+
+    private SpriteRenderer spriteRenderer;
 
     private int comboIndex = 0;
     private float lastAttackTime;
     private bool isAttacking = false;
 
+    private bool facingRight = true;
+
+    // 🔒 Block
+    private bool isBlocking = false;
+
+    private Vector3 attackPointStartLocalPos;
+
     void Start()
     {
         currentHealth = maxHealth;
+
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (!audioSource) audioSource = GetComponent<AudioSource>();
+
+        attackPointStartLocalPos = attackPoint.localPosition;
     }
 
     void Update()
     {
         if (isDead) return;
 
-        if (Input.GetButtonDown("Fire1") && !isAttacking)
+        HandleFacingDirection();
+
+        // 🛡️ BLOCK (HOLD RIGHT CLICK)
+        isBlocking = Input.GetMouseButton(1);
+        animator.SetBool("Block", isBlocking);
+
+        // ⚔️ ATTACK
+        if (Input.GetButtonDown("Fire1") && !isAttacking && !isBlocking)
         {
             StartCombo();
         }
     }
 
+    // ---------------- FACING ----------------
+
+    void HandleFacingDirection()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+
+        if (horizontal > 0.1f && !facingRight)
+            Flip();
+        else if (horizontal < -0.1f && facingRight)
+            Flip();
+    }
+
+    void Flip()
+    {
+        facingRight = !facingRight;
+
+        if (spriteRenderer != null)
+            spriteRenderer.flipX = !spriteRenderer.flipX;
+
+        Vector3 pos = attackPointStartLocalPos;
+        pos.x *= facingRight ? 1 : -1;
+        attackPoint.localPosition = pos;
+    }
+
+    // ---------------- ATTACK ----------------
+
     void StartCombo()
     {
         comboIndex++;
-        if (comboIndex > 3)
-            comboIndex = 1;
+        if (comboIndex > 3) comboIndex = 1;
 
         animator.SetTrigger("Attack" + comboIndex);
         lastAttackTime = Time.time;
         isAttacking = true;
+
+        // 🔊 Sword swing
+        PlaySound(swordSwingSFX);
     }
 
-    // 🔥 CALLED BY ANIMATION EVENT (HIT FRAME)
+    // 🔥 ANIMATION EVENT (HIT FRAME)
     public void DealDamage()
     {
-        if (attackPoint == null) return;
-
         Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
             attackPoint.position,
             attackRange,
@@ -62,36 +115,44 @@ public class PlayerCombat : MonoBehaviour
 
         foreach (Collider2D enemy in hitEnemies)
         {
-            if (enemy.TryGetComponent(out EnemyController enemyController))
+            if (enemy.TryGetComponent(out IDamageable damageable))
             {
-                enemyController.TakeDamage(attackDamage);
+                damageable.TakeDamage(attackDamage);
+
+                // 🔊 Hit sound ONLY if something is hit
+                PlaySound(swordHitSFX);
             }
         }
     }
 
-    // 🔚 CALLED BY ANIMATION EVENT (END FRAME)
+    // 🔚 ANIMATION EVENT (END FRAME)
     public void EndAttack()
     {
         isAttacking = false;
 
         if (Time.time - lastAttackTime > comboResetTime)
-        {
             comboIndex = 0;
-        }
     }
 
-    // ✅ ENEMY CALLS THIS
+    // ---------------- PLAYER DAMAGE + BLOCK ----------------
+
     public void TakeDamage(int damage)
     {
         if (isDead) return;
+
+        // 🛡️ BLOCK LOGIC
+        if (isBlocking)
+        {
+            animator.SetTrigger("BlockHit");
+            PlaySound(blockSFX);
+            return; // ❌ no damage
+        }
 
         currentHealth -= damage;
         animator.SetTrigger("Hurt");
 
         if (currentHealth <= 0)
-        {
             Die();
-        }
     }
 
     void Die()
@@ -99,7 +160,6 @@ public class PlayerCombat : MonoBehaviour
         isDead = true;
         animator.SetTrigger("Death");
 
-        // Stop all other scripts (movement, jump, etc.)
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
         foreach (MonoBehaviour script in scripts)
         {
@@ -107,13 +167,18 @@ public class PlayerCombat : MonoBehaviour
                 script.enabled = false;
         }
 
-        // Freeze physics
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.velocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Static;
         }
+    }
+
+    void PlaySound(AudioClip clip)
+    {
+        if (clip && audioSource)
+            audioSource.PlayOneShot(clip);
     }
 
     void OnDrawGizmosSelected()

@@ -58,8 +58,11 @@
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\script\HeroKnight.cs" />
     <Compile Include="Assets\script\EnemyWeapon.cs" />
+    <Compile Include="Assets\script\IDamageable.cs" />
     <Compile Include="Assets\script\BackgroundMusic.cs" />
     <Compile Include="Assets\script\CameraFollow.cs" />
+    <Compile Include="Assets\script\BossWall.cs" />
+    <Compile Include="Assets\script\BossController.cs" />
     <Compile Include="Assets\script\FloatingPlatform.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemyTest.cs" />
     <Compile Include="Assets\script\PlayerCombat.cs" />
@@ -71,10 +74,12 @@
     <Compile Include="Assets\script\ParallaxController.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Bringer Of Death\License.txt" />
     <None Include="Assets\Enemy Galore 1 - Pixel Art\Read Me.txt" />
     <None Include="Assets\Free Asset - 2D Handcrafted Art\Shader\NormalMappedSprite-Animated.shader" />
     <None Include="Assets\Free Asset - 2D Handcrafted Art\Readme.txt" />
     <None Include="Assets\Free Asset - 2D Handcrafted Art\Shader\NormalMappedTileAnimated.shader" />
+    <None Include="Assets\Bringer Of Death\Contact.txt" />
     <None Include="Assets\Hero Knight - Pixel Art\ColorSwap\Sprites-ColorSwap.shader" />
   </ItemGroup>
   <ItemGroup>
