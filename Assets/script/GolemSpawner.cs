@@ -45,4 +45,28 @@ public class GolemSpawner : MonoBehaviour
             if (hit.collider.gameObject.name.Contains("MovingPlatform"))
                 continue;
 
-            Vector2 spawnPos = hit.poi
+            Vector2 spawnPos = hit.point;
+            spawnPos.y += 0.1f;
+
+            // ❌ Too close to another golem
+            bool tooClose = false;
+            foreach (Vector2 pos in usedPositions)
+            {
+                if (Vector2.Distance(pos, spawnPos) < minDistanceBetweenGolems)
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+
+            if (tooClose)
+                continue;
+
+            // ✅ Spawn
+            Instantiate(golemPrefab, spawnPos, Quaternion.identity);
+            usedPositions.Add(spawnPos);
+        }
+
+        this.enabled = false;
+    }
+}
