@@ -4,10 +4,11 @@ public class EnemyAI : MonoBehaviour
 {
     [Header("Movement Stats")]
     public float speed = 3f;
-    public float stopDistance = 1.5f;
-    public float chaseRange = 10f;
+    public float stopDistance = 1.5f; // Distance to stop running
+    public float chaseRange = 10f;    // Distance to start chasing
 
     [Header("Attack Stats")]
+    public float attackRange = 2.5f;  // NEW: Must be larger than stopDistance
     public float attackRate = 1f;
     public int attackDamage = 10;
     float nextAttackTime = 0f;
@@ -27,27 +28,38 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
-        if (enemyHealth == null || player == null) return; 
+        // 1. DEAD CHECK: Stop everything if health is 0
+        if (enemyHealth != null && enemyHealth.currentHealth <= 0) 
+        {
+            this.enabled = false; // Disable AI script
+            animator.SetBool("Run", false); // Ensure run anim stops
+            return; 
+        }
+
+        if (player == null) return; 
 
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
 
+        // 2. CHASE LOGIC
         if (distanceToPlayer < chaseRange && distanceToPlayer > stopDistance)
         {
             ChasePlayer();
         }
-        else if (distanceToPlayer <= stopDistance)
+        else 
         {
+            // Stop running if close enough OR too far
             StopRunning();
             
-            if (Time.time >= nextAttackTime)
+            // 3. ATTACK LOGIC (Improved)
+            // Check if we are within ATTACK range (2.5) instead of STOP distance (1.5)
+            if (distanceToPlayer <= attackRange)
             {
-                AttackLogic(); // <--- Changed function name
-                nextAttackTime = Time.time + 1f / attackRate;
+                if (Time.time >= nextAttackTime)
+                {
+                    AttackLogic();
+                    nextAttackTime = Time.time + 1f / attackRate;
+                }
             }
-        }
-        else
-        {
-            StopRunning();
         }
     }
 
@@ -56,7 +68,6 @@ public class EnemyAI : MonoBehaviour
         transform.position = Vector2.MoveTowards(transform.position, player.position, speed * Time.deltaTime);
         animator.SetBool("Run", true);
 
-        // Face the player
         if (transform.position.x < player.position.x)
             transform.localScale = new Vector3(1, 1, 1);
         else
@@ -68,27 +79,14 @@ public class EnemyAI : MonoBehaviour
         animator.SetBool("Run", false);
     }
 
-    // --- NEW RANDOM ATTACK LOGIC ---
     void AttackLogic()
     {
-        // 1. Pick a random number between 1 and 3
-        int randomAttack = Random.Range(1, 4); // (1, 4) returns 1, 2, or 3
+        int randomAttack = Random.Range(1, 4); 
 
-        // 2. Trigger the correct animation based on the dice roll
-        if (randomAttack == 1)
-        {
-            animator.SetTrigger("Attack");
-        }
-        else if (randomAttack == 2)
-        {
-            animator.SetTrigger("Attack 2"); // Make sure this matches your Parameter name exactly!
-        }
-        else if (randomAttack == 3)
-        {
-            animator.SetTrigger("Attack 3"); // Make sure this matches your Parameter name exactly!
-        }
+        if (randomAttack == 1) animator.SetTrigger("Attack");
+        else if (randomAttack == 2) animator.SetTrigger("Attack 2");
+        else if (randomAttack == 3) animator.SetTrigger("Attack 3");
 
-        // 3. Deal Damage
         PlayerCombat playerScript = player.GetComponent<PlayerCombat>();
         if (playerScript != null)
         {
@@ -102,5 +100,7 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, chaseRange);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, stopDistance);
+        Gizmos.color = Color.blue; // Visualize Attack Range
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }

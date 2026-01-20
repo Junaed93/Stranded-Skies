@@ -51,13 +51,14 @@
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\script\EnemyController.cs" />
     <Compile Include="Assets\script\PlayerAttack.cs" />
-    <Compile Include="Assets\Hero Knight - Pixel Art\Demo\HeroKnight.cs" />
+    <Compile Include="Assets\script\GolemSpawner.cs" />
     <Compile Include="Assets\Free Asset - 2D Handcrafted Art\Scripts\CamerController.cs" />
     <Compile Include="Assets\script\PlayerHealth.cs" />
     <Compile Include="Assets\script\test.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\script\HeroKnight.cs" />
     <Compile Include="Assets\script\EnemyWeapon.cs" />
+    <Compile Include="Assets\script\BackgroundMusic.cs" />
     <Compile Include="Assets\script\CameraFollow.cs" />
     <Compile Include="Assets\script\FloatingPlatform.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemyTest.cs" />

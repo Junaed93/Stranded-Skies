@@ -2,52 +2,62 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    [Header("Stats")]
     public int maxHealth = 100;
-    int currentHealth;
+    public int currentHealth;
+    private bool isDead = false;
 
-    [Header("Components")]
-    public Animator animator;      
-    public Rigidbody2D rb;         
-    public Collider2D myCollider;  
+    public Animator animator;
+    public Rigidbody2D rb;
+    public Collider2D myCollider;
 
     void Start()
     {
         currentHealth = maxHealth;
-        rb.gravityScale = 1; 
-        rb.freezeRotation = true; 
     }
 
     public void TakeDamage(int damage)
     {
-        if (currentHealth <= 0) return;
+        if (isDead) return;
 
         currentHealth -= damage;
 
-        // MATCHES YOUR PARAMETER: "Hit"
-        animator.SetTrigger("Hit");
-
-        if (currentHealth <= 0)
+        if (currentHealth > 0)
+        {
+            animator.SetTrigger("Hit");
+        }
+        else
         {
             Die();
         }
     }
-    
+
     void Die()
     {
+        isDead = true;
         animator.SetTrigger("Death");
 
-        // ... your physics code ...
-        rb.bodyType = RigidbodyType2D.Kinematic;
-        rb.linearVelocity = Vector2.zero;
-        myCollider.enabled = false;
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
 
-        // --- ADD THIS LINE BELOW ---
-        // Disable the AI so it stops trying to attack/move while dead
-        GetComponent<EnemyAI>().enabled = false; 
-        
-        this.enabled = false;
-        Destroy(gameObject, 5f);
+        if (myCollider != null)
+            myCollider.enabled = false;
+
+        // Disable all other scripts (AI, movement, etc.)
+        MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
+        foreach (MonoBehaviour script in scripts)
+        {
+            if (script != this)
+                script.enabled = false;
+        }
     }
 
+    // 🔥 Animation Event at END of death animation
+    public void OnDeathAnimationEnd()
+    {
+        animator.enabled = false;
+        Destroy(gameObject, 0.5f);
+    }
 }
