@@ -27,10 +27,11 @@ public class EnemyAttack : MonoBehaviour
 
         if (hit)
         {
-            Health player = hit.GetComponent<Health>();
-            if (player != null)
+            // Use PlayerCombat for damage so blocking works
+            PlayerCombat playerCombat = hit.GetComponent<PlayerCombat>();
+            if (playerCombat != null)
             {
-                player.TakeDamage(damage);
+                playerCombat.TakeDamage(damage);
                 Debug.Log("Player hit");
             }
         }

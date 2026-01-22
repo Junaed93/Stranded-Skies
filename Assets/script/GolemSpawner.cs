@@ -1,78 +1,154 @@
 using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GolemSpawner : MonoBehaviour
 {
+    [Header("References")]
     public GameObject golemPrefab;
 
+    [Tooltip("Exact tag used by ground colliders")]
+    public string groundTag = "Ground";
+
+    [Header("Spawn Area (X only)")]
     public float minX;
     public float maxX;
-    public float raycastHeight = 10f;
 
+    [Header("Spawn Logic")]
+    public int minSpawn = 1;
     public int maxSpawn = 3;
-    public int maxAttempts = 30;
     public float minDistanceBetweenGolems = 3f;
+    public float verticalOffset = 0.1f;
+    public float initialSpawnDelay = 1f;
+    public float respawnDelay = 3f; // Delay before respawning after death
 
-    public float spawnDelay = 5f; // ⭐ NEW (seconds)
+    List<GameObject> activeGolems = new List<GameObject>();
+    List<Collider2D> groundColliders = new List<Collider2D>();
 
     void Start()
     {
-        StartCoroutine(SpawnAfterDelay());
+        if (!golemPrefab)
+        {
+            Debug.LogError("❌ Golem prefab missing");
+            return;
+        }
+
+        CacheGround();
+        StartCoroutine(InitialSpawn());
     }
 
-    IEnumerator SpawnAfterDelay()
+    void Update()
     {
-        yield return new WaitForSeconds(spawnDelay);
-        SpawnOnce();
+        // Check for dead golems and respawn them
+        CheckAndRespawnDeadGolems();
     }
 
-    void SpawnOnce()
+    void CacheGround()
     {
-        int spawnTarget = Random.Range(1, maxSpawn + 1);
+        groundColliders.Clear();
 
-        List<Vector2> usedPositions = new List<Vector2>();
+        GameObject[] grounds = GameObject.FindGameObjectsWithTag(groundTag);
+        foreach (GameObject g in grounds)
+        {
+            Collider2D col = g.GetComponent<Collider2D>();
+            if (col != null)
+                groundColliders.Add(col);
+        }
+
+        if (groundColliders.Count == 0)
+            Debug.LogError("❌ No ground colliders found with tag: " + groundTag);
+    }
+
+    IEnumerator InitialSpawn()
+    {
+        yield return new WaitForSeconds(initialSpawnDelay);
+        SpawnGolems();
+    }
+
+    void CheckAndRespawnDeadGolems()
+    {
+        // Remove null (destroyed) golems from list
+        for (int i = activeGolems.Count - 1; i >= 0; i--)
+        {
+            if (activeGolems[i] == null)
+            {
+                activeGolems.RemoveAt(i);
+                // Respawn a new golem at a random position after delay
+                StartCoroutine(RespawnAfterDelay());
+            }
+        }
+    }
+
+    IEnumerator RespawnAfterDelay()
+    {
+        yield return new WaitForSeconds(respawnDelay);
+        SpawnSingleGolem();
+    }
+
+    void SpawnGolems()
+    {
+        int spawnTarget = Random.Range(minSpawn, maxSpawn + 1);
+        
+        for (int i = 0; i < spawnTarget; i++)
+        {
+            SpawnSingleGolem();
+        }
+
+        Debug.Log($"✅ Spawned {activeGolems.Count} golems");
+    }
+
+    void SpawnSingleGolem()
+    {
         int attempts = 0;
+        int maxAttempts = 50;
 
-        while (usedPositions.Count < spawnTarget && attempts < maxAttempts)
+        while (attempts < maxAttempts)
         {
             attempts++;
 
-            float randomX = Random.Range(minX, maxX);
-            Vector2 rayOrigin = new Vector2(randomX, transform.position.y + raycastHeight);
+            Collider2D ground = groundColliders[Random.Range(0, groundColliders.Count)];
+            Bounds b = ground.bounds;
 
-            RaycastHit2D hit = Physics2D.Raycast(
-                rayOrigin,
-                Vector2.down,
-                raycastHeight * 2f
+            float randomX = Random.Range(
+                Mathf.Max(minX, b.min.x),
+                Mathf.Min(maxX, b.max.x)
             );
 
-            if (hit.collider == null)
-                continue;
+            Vector2 spawnPos = new Vector2(
+                randomX,
+                b.max.y + verticalOffset
+            );
 
-            if (hit.collider.gameObject.name.Contains("MovingPlatform"))
-                continue;
+            // Check distance from currently alive golems only
+            if (IsTooCloseToActiveGolems(spawnPos)) continue;
 
-            Vector2 spawnPos = hit.point;
-            spawnPos.y += 0.1f;
-
-            bool tooClose = false;
-            foreach (Vector2 pos in usedPositions)
-            {
-                if (Vector2.Distance(pos, spawnPos) < minDistanceBetweenGolems)
-                {
-                    tooClose = true;
-                    break;
-                }
-            }
-
-            if (tooClose)
-                continue;
-
-            Instantiate(golemPrefab, spawnPos, Quaternion.identity);
-            usedPositions.Add(spawnPos);
+            GameObject newGolem = Instantiate(golemPrefab, spawnPos, Quaternion.identity);
+            activeGolems.Add(newGolem);
+            Debug.Log($"🪨 Golem spawned at {spawnPos}");
+            return;
         }
 
-        this.enabled = false;
+        Debug.LogWarning("⚠️ Could not find valid spawn position after max attempts");
     }
+
+    bool IsTooCloseToActiveGolems(Vector2 pos)
+    {
+        foreach (GameObject golem in activeGolems)
+        {
+            if (golem != null)
+            {
+                if (Vector2.Distance(golem.transform.position, pos) < minDistanceBetweenGolems)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+#if UNITY_EDITOR
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(new Vector3(minX, transform.position.y), new Vector3(maxX, transform.position.y));
+    }
+#endif
 }

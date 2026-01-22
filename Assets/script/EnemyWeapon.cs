@@ -8,10 +8,11 @@ public class EnemyWeapon : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            Health playerHealth = collision.GetComponent<Health>();
-            if (playerHealth != null)
+            // Use PlayerCombat for damage so blocking works
+            PlayerCombat playerCombat = collision.GetComponent<PlayerCombat>();
+            if (playerCombat != null)
             {
-                playerHealth.TakeDamage(damage);
+                playerCombat.TakeDamage(damage);
                 Debug.Log("Player hit by enemy weapon");
             }
         }

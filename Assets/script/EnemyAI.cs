@@ -13,6 +13,11 @@ public class EnemyAI : MonoBehaviour
     public int attackDamage = 10;
     float nextAttackTime = 0f;
 
+    [Header("Edge Detection")]
+    public float groundCheckDistance = 1.5f; // How far down to check for ground
+    public float edgeCheckOffset = 0.5f;     // How far in front to check
+    public LayerMask groundLayer;            // Assign "Ground" layer in Inspector
+
     [Header("References")]
     public Transform player;
     public Animator animator;
@@ -24,6 +29,10 @@ public class EnemyAI : MonoBehaviour
             player = GameObject.FindGameObjectWithTag("Player").transform;
             
         enemyHealth = GetComponent<EnemyController>();
+
+        // Auto-detect ground layer if not set
+        if (groundLayer == 0)
+            groundLayer = LayerMask.GetMask("Ground");
     }
 
     void Update()
@@ -43,7 +52,16 @@ public class EnemyAI : MonoBehaviour
         // 2. CHASE LOGIC
         if (distanceToPlayer < chaseRange && distanceToPlayer > stopDistance)
         {
-            ChasePlayer();
+            // Only chase if ground ahead exists
+            if (IsGroundAhead())
+            {
+                ChasePlayer();
+            }
+            else
+            {
+                // Stop at edge - don't fall!
+                StopRunning();
+            }
         }
         else 
         {
@@ -61,6 +79,26 @@ public class EnemyAI : MonoBehaviour
                 }
             }
         }
+    }
+
+    bool IsGroundAhead()
+    {
+        // Determine facing direction
+        float direction = transform.localScale.x > 0 ? 1f : -1f;
+        
+        // Raycast start position (in front of enemy, at feet level)
+        Vector2 rayStart = new Vector2(
+            transform.position.x + (edgeCheckOffset * direction),
+            transform.position.y
+        );
+
+        // Cast ray downward
+        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, groundCheckDistance, groundLayer);
+
+        // Debug visualization
+        Debug.DrawRay(rayStart, Vector2.down * groundCheckDistance, hit ? Color.green : Color.red);
+
+        return hit.collider != null;
     }
 
     void ChasePlayer()
@@ -102,5 +140,15 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, stopDistance);
         Gizmos.color = Color.blue; // Visualize Attack Range
         Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        // Visualize edge detection ray
+        float direction = transform.localScale.x > 0 ? 1f : -1f;
+        Vector3 rayStart = new Vector3(
+            transform.position.x + (edgeCheckOffset * direction),
+            transform.position.y,
+            0
+        );
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawLine(rayStart, rayStart + Vector3.down * groundCheckDistance);
     }
 }
