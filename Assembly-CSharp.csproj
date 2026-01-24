@@ -57,13 +57,13 @@
     <Compile Include="Assets\script\EnemyWeapon.cs" />
     <Compile Include="Assets\script\IDamageable.cs" />
     <Compile Include="Assets\script\BossWall.cs" />
-    <Compile Include="Assets\script\BossController.cs" />
     <Compile Include="Assets\script\PlayerCombat.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
     <Compile Include="Assets\script\PlatformAttach.cs" />
     <Compile Include="Assets\script\EnemyAttack.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
     <Compile Include="Assets\script\EnemyController.cs" />
+    <Compile Include="Assets\script\SkullBoss.cs" />
     <Compile Include="Assets\script\GolemSpawner.cs" />
     <Compile Include="Assets\script\BackgroundMusic.cs" />
     <Compile Include="Assets\script\CameraFollow.cs" />
@@ -571,6 +571,10 @@
       <HintPath>C:\Program Files\Unity\Hub\Editor\6000.2.13f1\Editor\Data\Managed\UnityEngine\UnityEditor.XRModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="websocket-sharp">
+      <HintPath>Library\PackageCache\com.unity.services.wire@2d36cce58c62\Plugins\websocket-sharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
       <HintPath>Library\PackageCache\com.unity.collections@aea9d3bd5e19\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
       <Private>False</Private>
@@ -587,20 +591,16 @@
       <HintPath>Library\PackageCache\com.unity.visualscripting@b4d700247d4b\Runtime\VisualScripting.Flow\Dependencies\NCalc\Unity.VisualScripting.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Mono.Cecil">
       <HintPath>Library\PackageCache\com.unity.nuget.mono-cecil@d78732e851eb\Mono.Cecil.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe">
       <HintPath>Library\PackageCache\com.unity.collections@aea9d3bd5e19\Unity.Collections.Tests\System.Runtime.CompilerServices.Unsafe\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="websocket-sharp">
-      <HintPath>Library\PackageCache\com.unity.services.wire@2d36cce58c62\Plugins\websocket-sharp.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="netstandard">
@@ -1123,24 +1123,24 @@
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.MetricTestData.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Services.Multiplayer.Editor.Shared">
-      <HintPath>Library\ScriptAssemblies\Unity.Services.Multiplayer.Editor.Shared.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Services.QoS">
       <HintPath>Library\ScriptAssemblies\Unity.Services.QoS.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Services.Multiplayer.Editor.Shared">
+      <HintPath>Library\ScriptAssemblies\Unity.Services.Multiplayer.Editor.Shared.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Services.Core">
       <HintPath>Library\ScriptAssemblies\Unity.Services.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
-      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Netcode.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.Netcode.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Core.ShaderLibrary">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.ShaderLibrary.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Multiplayer.PlayMode.Analytics.Editor">
@@ -1151,12 +1151,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.SettingsProvider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.InternalAPIEditorBridge.001">
-      <HintPath>Library\ScriptAssemblies\Unity.InternalAPIEditorBridge.001.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Networking.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Networking.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.InternalAPIEditorBridge.001">
+      <HintPath>Library\ScriptAssemblies\Unity.InternalAPIEditorBridge.001.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Splines.Editor">
@@ -1179,12 +1179,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.RenderPipelines.Core.Runtime.Shared">
-      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.Shared.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Services.Multiplayer.Multiplay.Authoring.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Services.Multiplayer.Multiplay.Authoring.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Core.Runtime.Shared">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Runtime.Shared.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Multiplayer.Tools.MetricTypes">
@@ -1211,12 +1211,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Rendering.LightTransport.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Rider.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Services.Authentication">
       <HintPath>Library\ScriptAssemblies\Unity.Services.Authentication.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Rider.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.2D.Aseprite.Editor">
@@ -1267,12 +1267,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.InputSystem.ForUI.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.RenderPipelines.GPUDriven.Runtime">
-      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Profiling.Core">
       <HintPath>Library\ScriptAssemblies\Unity.Profiling.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.GPUDriven.Runtime">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.GPUDriven.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.State.Editor">
@@ -1343,12 +1343,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.MetricEvents.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.RenderPipelines.Core.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Netcode.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Netcode.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Core.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Multiplayer.Tools.NetworkSolutionInterface">
@@ -1363,16 +1363,16 @@
       <HintPath>Library\ScriptAssemblies\Unity.2D.IK.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.2D.Animation.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Multiplayer.Tools.NetworkSimulator.Runtime">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.NetworkSimulator.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Multiplayer.Tools.DependencyInjection">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.DependencyInjection.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.2D.Animation.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.Animation.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Universal.Editor">
@@ -1415,16 +1415,16 @@
       <HintPath>Library\ScriptAssemblies\Unity.VisualScripting.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Unity.Multiplayer.Tools.Adapters">
+      <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.Adapters.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Mathematics.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Mathematics.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Cinemachine.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Cinemachine.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Multiplayer.Tools.Adapters">
-      <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.Adapters.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Services.Vivox.Editor">
@@ -1451,12 +1451,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Center.NetcodeForGameObjectsExample.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.2D.Psdimporter.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.2D.Psdimporter.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Multiplayer.Tools.DependencyInjection.UIElements">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.DependencyInjection.UIElements.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.2D.Psdimporter.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.Psdimporter.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Runtime">
@@ -1479,12 +1479,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.2D.IK.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.2D.SpriteShape.Runtime">
-      <HintPath>Library\ScriptAssemblies\Unity.2D.SpriteShape.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Multiplayer.Tools.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.Editor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.2D.SpriteShape.Runtime">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.SpriteShape.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Multiplayer.Widgets.Session">
@@ -1523,12 +1523,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Center.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Burst">
-      <HintPath>Library\ScriptAssemblies\Unity.Burst.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Multiplayer.Center.Integrations">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Center.Integrations.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Burst">
+      <HintPath>Library\ScriptAssemblies\Unity.Burst.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.VisualScripting.Core.Editor">
@@ -1587,12 +1587,12 @@
       <HintPath>Library\ScriptAssemblies\Unity.Settings.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEditor.UI">
-      <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Multiplayer.Tools.NetVis.Editor.UI">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.NetVis.Editor.UI.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEditor.UI">
+      <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

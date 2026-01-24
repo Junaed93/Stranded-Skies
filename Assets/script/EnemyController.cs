@@ -1,23 +1,36 @@
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class EnemyController : MonoBehaviour, IDamageable
 {
     [Header("Health")]
     public int maxHealth = 100;
     public int currentHealth;
-    private bool isDead = false;
+    bool isDead;
 
     [Header("Components")]
     public Animator animator;
     public Rigidbody2D rb;
     public Collider2D myCollider;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip hurtSFX;
+    public AudioClip deathSFX;
+
+    void Awake()
+    {
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
+        audioSource.spatialBlend = 0f; // 🔥 FORCE 2D AUDIO
+    }
+
     void Start()
     {
         currentHealth = maxHealth;
     }
 
-    // ✅ CALLED BY PLAYER (via IDamageable)
     public void TakeDamage(int damage)
     {
         if (isDead) return;
@@ -27,6 +40,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (currentHealth > 0)
         {
             animator.SetTrigger("Hit");
+            PlaySound(hurtSFX);
         }
         else
         {
@@ -36,32 +50,45 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     void Die()
     {
+        if (isDead) return;
         isDead = true;
+
+        PlaySound(deathSFX);
         animator.SetTrigger("Death");
 
-        // Stop physics
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Kinematic;
         }
 
-        // Disable collision
         if (myCollider != null)
             myCollider.enabled = false;
 
-        // Disable all other scripts (AI, movement, etc.)
+        // 🔥 Disable ALL scripts except this one
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
-        foreach (MonoBehaviour script in scripts)
+        foreach (MonoBehaviour s in scripts)
         {
-            if (script != this)
-                script.enabled = false;
+            if (s != this)
+                s.enabled = false;
         }
     }
 
-    // 🔥 ANIMATION EVENT (LAST FRAME OF DEATH)
+    // Called via Animation Event at the END of death animation
     public void OnDeathAnimationEnd()
     {
         Destroy(gameObject, 0.5f);
+    }
+
+    void PlaySound(AudioClip clip)
+    {
+        if (clip == null)
+        {
+            Debug.LogWarning("❌ Missing audio clip on " + name);
+            return;
+        }
+
+        audioSource.PlayOneShot(clip);
+        Debug.Log("🔊 Playing sound: " + clip.name);
     }
 }

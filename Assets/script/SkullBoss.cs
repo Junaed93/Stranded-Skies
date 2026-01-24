@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BossController : MonoBehaviour, IDamageable
+public class SkullBoss : MonoBehaviour, IDamageable
 {
     [Header("References")]
     public Transform player;
@@ -22,14 +22,13 @@ public class BossController : MonoBehaviour, IDamageable
 
     [Header("Attack")]
     public float attackCooldown = 2f;
-    public int attackDamage = 25;  // Damage dealt to player
-    public Transform attackPoint;  // Optional: for hitbox detection
-    public float attackHitRange = 1.8f; // Range for attack hitbox
+    public int attackDamage = 25;
+    public float attackHitRange = 1.8f;
 
     [Header("Edge Detection")]
-    public float groundCheckDistance = 2f;  // How far down to check for ground
-    public float edgeCheckOffset = 1f;      // How far in front to check
-    public LayerMask groundLayer;           // Assign "Ground" layer in Inspector
+    public float groundCheckDistance = 2f;
+    public float edgeCheckOffset = 1f;
+    public LayerMask groundLayer;
 
     float lastAttackTime;
     bool isAttacking;
@@ -54,7 +53,6 @@ public class BossController : MonoBehaviour, IDamageable
         rb.gravityScale = 1f;
         rb.freezeRotation = true;
 
-        // Auto-detect ground layer if not set
         if (groundLayer == 0)
             groundLayer = LayerMask.GetMask("Ground");
     }
@@ -65,9 +63,17 @@ public class BossController : MonoBehaviour, IDamageable
 
         float horizontalDistance = Mathf.Abs(transform.position.x - player.position.x);
 
+        // 🔴 FRONT CHECK
+        if (!IsPlayerInFront())
+        {
+            moveDir = 0;
+            animator.SetBool("Run", false);
+            return;
+        }
+
         FacePlayer();
 
-        // Ability ONCE
+        // Ability plays once
         if (!abilityPlayed && horizontalDistance <= abilityRange)
         {
             animator.SetTrigger("Ability");
@@ -87,7 +93,6 @@ public class BossController : MonoBehaviour, IDamageable
         }
         else
         {
-            // Check for edge before moving
             if (IsGroundAhead())
             {
                 moveDir = Mathf.Sign(player.position.x - transform.position.x);
@@ -95,7 +100,6 @@ public class BossController : MonoBehaviour, IDamageable
             }
             else
             {
-                // Stop at edge - don't fall!
                 moveDir = 0;
                 animator.SetBool("Run", false);
             }
@@ -109,24 +113,39 @@ public class BossController : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(moveDir * moveSpeed, rb.linearVelocity.y);
     }
 
+    // ---------------- FRONT CHECK ----------------
+
+    bool IsPlayerInFront()
+    {
+        float facingDir = Mathf.Sign(transform.localScale.x);
+        float playerDir = Mathf.Sign(player.position.x - transform.position.x);
+
+        return facingDir == playerDir;
+    }
+
     // ---------------- EDGE DETECTION ----------------
 
     bool IsGroundAhead()
     {
-        // Determine facing direction based on player position
         float direction = Mathf.Sign(player.position.x - transform.position.x);
 
-        // Raycast start position (in front of boss, at feet level)
         Vector2 rayStart = new Vector2(
             transform.position.x + (edgeCheckOffset * direction),
             transform.position.y
         );
 
-        // Cast ray downward
-        RaycastHit2D hit = Physics2D.Raycast(rayStart, Vector2.down, groundCheckDistance, groundLayer);
+        RaycastHit2D hit = Physics2D.Raycast(
+            rayStart,
+            Vector2.down,
+            groundCheckDistance,
+            groundLayer
+        );
 
-        // Debug visualization
-        Debug.DrawRay(rayStart, Vector2.down * groundCheckDistance, hit ? Color.green : Color.red);
+        Debug.DrawRay(
+            rayStart,
+            Vector2.down * groundCheckDistance,
+            hit ? Color.green : Color.red
+        );
 
         return hit.collider != null;
     }
@@ -165,25 +184,20 @@ public class BossController : MonoBehaviour, IDamageable
         isAttacking = true;
         lastAttackTime = Time.time;
 
-        // SAFETY RESET (in case animation event is missing)
         Invoke(nameof(ForceEndAttack), 1.2f);
     }
 
-    // 🔥 ANIMATION EVENT - Call this from attack animation hit frame
     public void DealDamage()
     {
         if (player == null) return;
 
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        
-        if (distanceToPlayer <= attackHitRange)
+        float distance = Vector2.Distance(transform.position, player.position);
+
+        if (distance <= attackHitRange)
         {
-            PlayerCombat playerCombat = player.GetComponent<PlayerCombat>();
-            if (playerCombat != null)
-            {
-                playerCombat.TakeDamage(attackDamage);
-                Debug.Log("Boss hit player for " + attackDamage + " damage!");
-            }
+            PlayerCombat pc = player.GetComponent<PlayerCombat>();
+            if (pc != null)
+                pc.TakeDamage(attackDamage);
         }
     }
 
@@ -192,7 +206,6 @@ public class BossController : MonoBehaviour, IDamageable
         isAttacking = false;
     }
 
-    // Animation Event (preferred)
     public void EndAttack()
     {
         isAttacking = false;
@@ -229,27 +242,5 @@ public class BossController : MonoBehaviour, IDamageable
             bossWall.DestroyWall();
 
         enabled = false;
-    }
-
-    // ---------------- GIZMOS ----------------
-
-    void OnDrawGizmosSelected()
-    {
-        // Visualize edge detection ray
-        float direction = 1f;
-        if (player != null)
-            direction = Mathf.Sign(player.position.x - transform.position.x);
-
-        Vector3 rayStart = new Vector3(
-            transform.position.x + (edgeCheckOffset * direction),
-            transform.position.y,
-            0
-        );
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawLine(rayStart, rayStart + Vector3.down * groundCheckDistance);
-
-        // Attack range
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 }
