@@ -8,6 +8,7 @@ TagManager:
   - Enemy
   - MovingPlatform
   - BossWall
+  - BossBackWall
   layers:
   - Default
   - TransparentFX
@@ -44,6 +45,9 @@ TagManager:
   m_SortingLayers:
   - name: Background
     uniqueID: 840828381
+    locked: 0
+  - name: wall_light
+    uniqueID: 1908954633
     locked: 0
   - name: Default
     uniqueID: 0

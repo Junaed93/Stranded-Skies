@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SkullBoss : MonoBehaviour, IDamageable
+public class CrabBoss : MonoBehaviour, IDamageable
 {
     [Header("References")]
     public Transform player;
@@ -9,7 +9,7 @@ public class SkullBoss : MonoBehaviour, IDamageable
     public BossWall bossWall;
 
     [Header("Health")]
-    public int maxHealth = 200;
+    public int maxHealth = 250;
     int currentHealth;
     bool isDead;
 
@@ -58,17 +58,14 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         float distance = Vector2.Distance(transform.position, player.position);
 
-        // ❌ Player too far → idle
         if (distance > detectRange)
         {
             StopMoving();
             return;
         }
 
-        // ✅ ALWAYS face player when detected
         FacePlayer();
 
-        // ❌ Do nothing if attacking
         if (isAttacking)
         {
             HandleAttackDamage();
@@ -76,14 +73,12 @@ public class SkullBoss : MonoBehaviour, IDamageable
             return;
         }
 
-        // ❌ Player must be in front to move/attack
         if (!IsPlayerInFront())
         {
             StopMoving();
             return;
         }
 
-        // ✅ Attack
         if (distance <= attackRange && Time.time >= lastAttackTime + attackCooldown)
         {
             StartAttack();
@@ -101,7 +96,7 @@ public class SkullBoss : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(moveDir * moveSpeed, rb.linearVelocity.y);
     }
 
-    // ---------------- ATTACK (NO EVENTS) ----------------
+    // ---------------- ATTACK ----------------
 
     void StartAttack()
     {
