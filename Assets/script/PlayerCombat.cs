@@ -13,6 +13,11 @@ public class PlayerCombat : MonoBehaviour
     public int attackDamage = 20;
     public LayerMask enemyLayers;
 
+    [Header("Survival Settings")]
+    public int maxRespawns = 3;
+    public float minHeight = -20f; // Fall threshold
+    private int currentRespawns;
+
     [Header("Combo Settings")]
     public float comboResetTime = 0.9f;
 
@@ -37,20 +42,29 @@ public class PlayerCombat : MonoBehaviour
     private bool isBlocking = false;
 
     private Vector3 attackPointStartLocalPos;
+    private AutoCheckpoint autoCheckpoint; // [NEW]
 
     void Start()
     {
         currentHealth = maxHealth;
+        currentRespawns = maxRespawns; // [NEW] Init lives
 
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (!audioSource) audioSource = GetComponent<AudioSource>();
 
         attackPointStartLocalPos = attackPoint.localPosition;
+        autoCheckpoint = GetComponent<AutoCheckpoint>(); // [NEW]
     }
 
     void Update()
     {
         if (isDead) return;
+
+        // [NEW] Fall Check
+        if (transform.position.y < minHeight)
+        {
+            TakeDamage(maxHealth); // Instant death
+        }
 
         HandleFacingDirection();
 
@@ -161,6 +175,7 @@ public class PlayerCombat : MonoBehaviour
         isDead = true;
         animator.SetTrigger("Death");
 
+        // Disable controls
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
         foreach (MonoBehaviour script in scripts)
         {
@@ -173,6 +188,53 @@ public class PlayerCombat : MonoBehaviour
         {
             rb.linearVelocity = Vector2.zero;
             rb.bodyType = RigidbodyType2D.Static;
+        }
+
+        // [NEW] Trigger auto-respawn IF lives remain
+        if (currentRespawns > 0)
+        {
+            currentRespawns--;
+            Debug.Log("Respawns remaining: " + currentRespawns);
+            Invoke(nameof(Respawn), 1.5f);
+        }
+        else
+        {
+            Debug.Log("Game Over - No respawns left.");
+            // Optional: SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
+    // [NEW] Respawn Logic
+    void Respawn()
+    {
+        isDead = false;
+        animator.Play("Idle"); // Reset animation state
+        currentHealth = maxHealth;
+
+        // Restore Physics
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        // Re-enable scripts (Movement, etc.)
+        MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
+        foreach (MonoBehaviour script in scripts)
+        {
+            if (script != this)
+                script.enabled = true;
+        }
+
+        // Move to last safe position
+        if (autoCheckpoint != null)
+        {
+            transform.position = autoCheckpoint.GetLastSafePosition();
+        }
+        else
+        {
+            Debug.LogWarning("No AutoCheckpoint found!");
         }
     }
 

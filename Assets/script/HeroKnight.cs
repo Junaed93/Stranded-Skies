@@ -7,6 +7,11 @@ public class HeroKnightController : MonoBehaviour
     public float jumpForce = 7f;
     public float rollForce = 8f;
 
+    [Header("Audio")]
+    public AudioSource PlayerAudioSource;
+    public AudioClip runClip;
+    public AudioClip jumpClip;
+
     Rigidbody2D rb;
     Animator anim;
     SpriteRenderer sr;
@@ -21,6 +26,8 @@ public class HeroKnightController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sr = GetComponent<SpriteRenderer>();
+        if (PlayerAudioSource == null)
+            PlayerAudioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -42,12 +49,29 @@ public class HeroKnightController : MonoBehaviour
         anim.SetFloat("AirY", rb.linearVelocity.y);
         anim.SetBool("Grounded", grounded);
 
+        // RUN SOUND
+        if (grounded && Mathf.Abs(x) > 0.1f)
+        {
+            if (!PlayerAudioSource.isPlaying)
+            {
+                PlayerAudioSource.clip = runClip;
+                PlayerAudioSource.loop = true;
+                PlayerAudioSource.Play();
+            }
+        }
+        else
+        {
+            if (PlayerAudioSource.isPlaying && PlayerAudioSource.clip == runClip)
+                PlayerAudioSource.Stop();
+        }
+
         // JUMP
         if (Input.GetKeyDown(KeyCode.Space) && grounded)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             grounded = false;
             anim.SetTrigger("Jump");
+            PlayerAudioSource.PlayOneShot(jumpClip);
         }
 
         // ATTACK COMBO
@@ -103,5 +127,5 @@ public class HeroKnightController : MonoBehaviour
     {
         if (col.gameObject.CompareTag("Ground") || col.gameObject.CompareTag("MovingPlatform"))
             grounded = true;
-    } 
+    }
 }

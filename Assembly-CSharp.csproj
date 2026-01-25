@@ -62,11 +62,13 @@
     <Compile Include="Assets\script\PlatformAttach.cs" />
     <Compile Include="Assets\script\EnemyAttack.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
+    <Compile Include="Assets\script\GolemBoss.cs" />
     <Compile Include="Assets\script\EnemyController.cs" />
     <Compile Include="Assets\script\SkullBoss.cs" />
     <Compile Include="Assets\script\GolemSpawner.cs" />
     <Compile Include="Assets\script\BackgroundMusic.cs" />
     <Compile Include="Assets\script\CameraFollow.cs" />
+    <Compile Include="Assets\script\AutoCheckpoint.cs" />
     <Compile Include="Assets\script\FloatingPlatform.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemyTest.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemySelector.cs" />
@@ -1336,10 +1338,6 @@
       <HintPath>Library\ScriptAssemblies\Unity.Splines.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Unity.Multiplayer.Widgets.Vivox">
-      <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Widgets.Vivox.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.Multiplayer.Tools.MetricEvents">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Tools.MetricEvents.dll</HintPath>
       <Private>False</Private>
@@ -1426,10 +1424,6 @@
     </Reference>
     <Reference Include="Unity.Cinemachine.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Cinemachine.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Services.Vivox.Editor">
-      <HintPath>Library\ScriptAssemblies\Unity.Services.Vivox.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Cinemachine">
@@ -1538,10 +1532,6 @@
     </Reference>
     <Reference Include="Unity.Multiplayer.Center.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.Multiplayer.Center.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Services.Vivox">
-      <HintPath>Library\ScriptAssemblies\Unity.Services.Vivox.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Multiplayer.Playmode">
