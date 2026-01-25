@@ -56,6 +56,10 @@ public class EnemyController : MonoBehaviour, IDamageable
         PlaySound(deathSFX);
         animator.SetTrigger("Death");
 
+        // [NEW] Add score
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.AddScore(50);
+
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;

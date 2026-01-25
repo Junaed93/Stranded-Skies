@@ -18,6 +18,12 @@ public class PlayerCombat : MonoBehaviour
     public float minHeight = -20f; // Fall threshold
     private int currentRespawns;
 
+    [Header("Heal/Regen Settings")]
+    public float regenRate = 5f; // HP per second
+    public float regenDelay = 3f; // Seconds after damage before regen starts
+    private float lastDamageTime;
+    private float regenAccumulator;
+
     [Header("Combo Settings")]
     public float comboResetTime = 0.9f;
 
@@ -63,7 +69,15 @@ public class PlayerCombat : MonoBehaviour
         // [NEW] Fall Check
         if (transform.position.y < minHeight)
         {
-            TakeDamage(maxHealth); // Instant death
+            Die(); // Call Die directly for falls
+        }
+
+        HandleRegeneration();
+
+        // [NEW] Manual Heal (Press H)
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            Heal(20);
         }
 
         HandleFacingDirection();
@@ -165,6 +179,7 @@ public class PlayerCombat : MonoBehaviour
 
         currentHealth -= damage;
         animator.SetTrigger("Hurt");
+        lastDamageTime = Time.time; // [NEW] Reset regen timer
 
         if (currentHealth <= 0)
             Die();
@@ -172,7 +187,12 @@ public class PlayerCombat : MonoBehaviour
 
     void Die()
     {
+        if (isDead) return;
         isDead = true;
+
+        lastDamageTime = 0; // Stop regen on death
+
+        animator.SetBool("IsDead", true); // [NEW] Keep in death state
         animator.SetTrigger("Death");
 
         // Disable controls
@@ -204,19 +224,38 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
-    // [NEW] Respawn Logic
     void Respawn()
     {
         isDead = false;
-        animator.Play("Idle"); // Reset animation state
         currentHealth = maxHealth;
 
-        // Restore Physics
+        // Reset Animator
+        animator.SetBool("IsDead", false);
+        animator.Rebind(); // [NEW] Reset all triggers and state
+        animator.Update(0f);
+        animator.Play("Idle");
+
+        // Restore Physics & Position
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        Collider2D col = GetComponent<Collider2D>();
+
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
+            
+            // Move to last safe position BEFORE enabling scripts
+            if (autoCheckpoint != null)
+            {
+                rb.position = autoCheckpoint.GetLastSafePosition();
+                transform.position = autoCheckpoint.GetLastSafePosition();
+            }
+            rb.WakeUp();
+        }
+
+        if (col != null)
+        {
+            col.enabled = true; // [NEW] Ensure collider is on
         }
 
         // Re-enable scripts (Movement, etc.)
@@ -226,15 +265,31 @@ public class PlayerCombat : MonoBehaviour
             if (script != this)
                 script.enabled = true;
         }
+    }
 
-        // Move to last safe position
-        if (autoCheckpoint != null)
+    public void Heal(int amount)
+    {
+        if (isDead) return;
+        currentHealth += amount;
+        currentHealth = Mathf.Min(currentHealth, maxHealth);
+        Debug.Log("Healed! Current HP: " + currentHealth);
+    }
+
+    void HandleRegeneration()
+    {
+        if (isDead || currentHealth >= maxHealth) return;
+
+        // Wait for delay after last damage
+        if (Time.time - lastDamageTime >= regenDelay)
         {
-            transform.position = autoCheckpoint.GetLastSafePosition();
-        }
-        else
-        {
-            Debug.LogWarning("No AutoCheckpoint found!");
+            regenAccumulator += regenRate * Time.deltaTime;
+
+            if (regenAccumulator >= 1f)
+            {
+                int healAmount = Mathf.FloorToInt(regenAccumulator);
+                currentHealth = Mathf.Min(currentHealth + healAmount, maxHealth);
+                regenAccumulator -= healAmount;
+            }
         }
     }
 

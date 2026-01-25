@@ -41,6 +41,7 @@ public class GolemBoss : MonoBehaviour, IDamageable
     float moveDir;
     bool isBossFightActive = false;
     bool bossMusicPlaying = false;
+    bool phaseScoreGiven = false; // [NEW]
 
     void Start()
     {
@@ -196,6 +197,14 @@ public class GolemBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
+        // [NEW] Phase 1 score at 50% HP
+        if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
+        {
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.AddScore(100);
+            phaseScoreGiven = true;
+        }
+
         if (currentHealth <= 0)
             Die();
     }
@@ -270,6 +279,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
 
         StopMoving();
         rb.simulated = false;
+
+        // [NEW] Final kill score
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.AddScore(400);
 
         foreach (Collider2D col in GetComponentsInChildren<Collider2D>())
             col.enabled = false;

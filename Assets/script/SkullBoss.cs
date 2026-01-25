@@ -34,6 +34,7 @@ public class SkullBoss : MonoBehaviour, IDamageable
     bool isAttacking;
     bool hasDealtDamage;
     float moveDir;
+    bool phaseScoreGiven = false; // [NEW]
 
     void Start()
     {
@@ -207,6 +208,14 @@ public class SkullBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
+        // [NEW] Phase 1 score at 50% HP
+        if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
+        {
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.AddScore(20);
+            phaseScoreGiven = true;
+        }
+
         if (currentHealth <= 0)
             Die();
     }
@@ -218,6 +227,10 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         StopMoving();
         rb.simulated = false;
+
+        // [NEW] Final kill score
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.AddScore(80);
 
         foreach (Collider2D col in GetComponentsInChildren<Collider2D>())
             col.enabled = false;
