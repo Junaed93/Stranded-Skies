@@ -60,6 +60,10 @@ public class PlayerCombat : MonoBehaviour
 
         attackPointStartLocalPos = attackPoint.localPosition;
         autoCheckpoint = GetComponent<AutoCheckpoint>(); // [NEW]
+
+        // [NEW] Initial UI Update
+        if (PlayerHealthUI.Instance != null)
+            PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
     }
 
     void Update()
@@ -195,6 +199,10 @@ public class PlayerCombat : MonoBehaviour
         animator.SetTrigger("Hurt");
         lastDamageTime = Time.time; // [NEW] Reset regen timer
 
+        // [NEW] UI Update
+        if (PlayerHealthUI.Instance != null)
+            PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+
         if (currentHealth <= 0)
             Die();
     }
@@ -243,6 +251,10 @@ public class PlayerCombat : MonoBehaviour
         isDead = false;
         currentHealth = maxHealth;
 
+        // [NEW] UI Update
+        if (PlayerHealthUI.Instance != null)
+            PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+
         // Reset Animator
         animator.SetBool("IsDead", false);
         animator.Rebind(); // [NEW] Reset all triggers and state
@@ -286,6 +298,11 @@ public class PlayerCombat : MonoBehaviour
         if (isDead) return;
         currentHealth += amount;
         currentHealth = Mathf.Min(currentHealth, maxHealth);
+        
+        // [NEW] UI Update
+        if (PlayerHealthUI.Instance != null)
+            PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+
         Debug.Log("Healed! Current HP: " + currentHealth);
     }
 
@@ -303,6 +320,10 @@ public class PlayerCombat : MonoBehaviour
                 int healAmount = Mathf.FloorToInt(regenAccumulator);
                 currentHealth = Mathf.Min(currentHealth + healAmount, maxHealth);
                 regenAccumulator -= healAmount;
+
+                // [NEW] UI Update
+                if (PlayerHealthUI.Instance != null)
+                    PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
             }
         }
     }
