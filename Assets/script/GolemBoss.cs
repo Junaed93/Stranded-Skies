@@ -9,7 +9,7 @@ public class GolemBoss : MonoBehaviour, IDamageable
     public BossWall bossWall;
 
     [Header("Health")]
-    public int maxHealth = 500;   // 🔥 MAIN BOSS HEALTH
+    public int maxHealth = 500;
     int currentHealth;
     bool isDead;
 
@@ -20,14 +20,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
     public float moveSpeed = 2f;
 
     [Header("Attack")]
-    public float attackRange = 1.6f;
-    public float attackCooldown = 2f;
-    public int attackDamage = 25;
-    public float attackHitRange = 1.8f;
-
-    [Header("Attack Timing (NO EVENTS)")]
-    public float attackHitDelay = 0.6f;
-    public float attackDuration = 1.2f;
+    public float attackRange = 2.5f;   // Kept slightly larger for Golem
+    public float attackCooldown = 2.5f;
+    public int attackDamage = 35;
+    public float attackHitRange = 3f;  // Kept slightly larger for Golem
 
     [Header("Edge Detection")]
     public float groundCheckDistance = 2f;
@@ -35,13 +31,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
     public LayerMask groundLayer;
 
     float lastAttackTime;
-    float attackTimer;
     bool isAttacking;
     bool hasDealtDamage;
     float moveDir;
-    bool isBossFightActive = false;
-    bool bossMusicPlaying = false;
-    bool phaseScoreGiven = false; // [NEW]
+    bool phaseScoreGiven = false;
 
     void Start()
     {
@@ -54,6 +47,7 @@ public class GolemBoss : MonoBehaviour, IDamageable
         rb = GetComponent<Rigidbody2D>();
 
         rb.freezeRotation = true;
+        rb.gravityScale = 1f;
 
         if (groundLayer == 0)
             groundLayer = LayerMask.GetMask("Ground");
@@ -65,8 +59,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
 
         float distance = Vector2.Distance(transform.position, player.position);
 
-        UpdateBossMusic(distance);
-
         if (distance > detectRange)
         {
             StopMoving();
@@ -77,7 +69,13 @@ public class GolemBoss : MonoBehaviour, IDamageable
 
         if (isAttacking)
         {
-            HandleAttack();
+            HandleAttackDamage();
+            StopMoving();
+            return;
+        }
+
+        if (!IsPlayerInFront())
+        {
             StopMoving();
             return;
         }
@@ -95,48 +93,47 @@ public class GolemBoss : MonoBehaviour, IDamageable
     void FixedUpdate()
     {
         if (isDead || isAttacking) return;
+
         rb.linearVelocity = new Vector2(moveDir * moveSpeed, rb.linearVelocity.y);
     }
 
-    // ================= ATTACK =================
+    // ---------------- ATTACK ----------------
 
     void StartAttack()
     {
         isAttacking = true;
         hasDealtDamage = false;
-        attackTimer = 0f;
         lastAttackTime = Time.time;
 
         animator.SetBool("Run", false);
+        animator.SetTrigger("Attack");
 
-        int atk = Random.Range(1, 4);
-        animator.SetTrigger("Attack" + atk);
+        Invoke(nameof(EndAttack), 1.5f); // Matches Golem's longer animation
     }
 
-    void HandleAttack()
+    void HandleAttackDamage()
     {
-        attackTimer += Time.deltaTime;
+        if (hasDealtDamage) return;
 
-        if (!hasDealtDamage && attackTimer >= attackHitDelay)
+        float dist = Vector2.Distance(transform.position, player.position);
+        if (dist <= attackHitRange)
         {
-            float dist = Vector2.Distance(transform.position, player.position);
-            if (dist <= attackHitRange)
+            PlayerCombat pc = player.GetComponent<PlayerCombat>();
+            if (pc != null)
             {
-                PlayerCombat pc = player.GetComponent<PlayerCombat>();
-                if (pc != null)
-                    pc.TakeDamage(attackDamage);
+                pc.TakeDamage(attackDamage);
+                hasDealtDamage = true;
+                Debug.Log("Golem hit player!");
             }
-
-            hasDealtDamage = true;
-        }
-
-        if (attackTimer >= attackDuration)
-        {
-            isAttacking = false;
         }
     }
 
-    // ================= MOVEMENT =================
+    void EndAttack()
+    {
+        isAttacking = false;
+    }
+
+    // ---------------- MOVEMENT ----------------
 
     void MoveTowardsPlayer()
     {
@@ -169,6 +166,15 @@ public class GolemBoss : MonoBehaviour, IDamageable
         );
     }
 
+    bool IsPlayerInFront()
+    {
+        float facing = Mathf.Sign(transform.localScale.x);
+        float toPlayer = Mathf.Sign(player.position.x - transform.position.x);
+        return facing == toPlayer;
+    }
+
+    // ---------------- EDGE DETECTION ----------------
+
     bool IsGroundAhead()
     {
         float dir = Mathf.Sign(transform.localScale.x);
@@ -185,10 +191,11 @@ public class GolemBoss : MonoBehaviour, IDamageable
             groundLayer
         );
 
+        Debug.DrawRay(start, Vector2.down * groundCheckDistance, hit ? Color.green : Color.red);
         return hit.collider != null;
     }
 
-    // ================= DAMAGE =================
+    // ---------------- DAMAGE ----------------
 
     public void TakeDamage(int damage)
     {
@@ -197,7 +204,7 @@ public class GolemBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
-        // [NEW] Phase 1 score at 50% HP
+        // [NEW] Phase 1 score at 50% HP (Golem: 100 pts)
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
             if (ScoreManager.Instance != null)
@@ -209,69 +216,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
             Die();
     }
 
-    // ================= MUSIC =================
-
-    void UpdateBossMusic(float distance)
-    {
-        // OUTSIDE BOSS AREA → ABSOLUTE RESET
-        if (distance > detectRange)
-        {
-            if (isBossFightActive)
-                EndBossFight();
-            return;
-        }
-
-        // ENTER BOSS AREA
-        if (!isBossFightActive)
-            StartBossFight();
-
-        // INSIDE BOSS AREA → FRONT CHECK
-        if (IsPlayerInFront())
-            PlayBossMusic();
-        else
-            StopBossMusic();
-    }
-
-    void StartBossFight()
-    {
-        isBossFightActive = true;
-    }
-
-    void EndBossFight()
-    {
-        StopBossMusic();
-        isBossFightActive = false;
-    }
-
-    void PlayBossMusic()
-    {
-        if (bossMusicPlaying) return;
-
-        if (BackgroundMusic.Instance != null)
-        {
-            BackgroundMusic.Instance.PlayBossMusic();
-            bossMusicPlaying = true;
-        }
-    }
-
-    void StopBossMusic()
-    {
-        if (!bossMusicPlaying) return;
-
-        if (BackgroundMusic.Instance != null)
-        {
-            BackgroundMusic.Instance.PlayNormalMusic();
-            bossMusicPlaying = false;
-        }
-    }
-
-    bool IsPlayerInFront()
-    {
-        float bossFacing = Mathf.Sign(transform.localScale.x);
-        float toPlayer = Mathf.Sign(player.position.x - transform.position.x);
-        return bossFacing == toPlayer;
-    }
-
     void Die()
     {
         if (isDead) return;
@@ -280,7 +224,7 @@ public class GolemBoss : MonoBehaviour, IDamageable
         StopMoving();
         rb.simulated = false;
 
-        // [NEW] Final kill score
+        // [NEW] Final kill score (Golem: 400 pts)
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(400);
 
@@ -292,7 +236,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
         if (bossWall != null)
             bossWall.DestroyWall();
 
-        EndBossFight();
         Destroy(gameObject, 2f);
     }
 }

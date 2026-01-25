@@ -50,7 +50,6 @@
   <ItemGroup>
     <Compile Include="Assets\script\PlayerAttack.cs" />
     <Compile Include="Assets\Free Asset - 2D Handcrafted Art\Scripts\CamerController.cs" />
-    <Compile Include="Assets\script\CameraFollowDynamicCombatZoom.cs" />
     <Compile Include="Assets\script\PlayerHealth.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\script\HeroKnight.cs" />

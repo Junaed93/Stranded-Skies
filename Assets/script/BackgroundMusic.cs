@@ -4,9 +4,8 @@ public class BackgroundMusic : MonoBehaviour
 {
     public static BackgroundMusic Instance;
 
-    [Header("Music Clips")]
-    public AudioClip normalMusic;
-    public AudioClip bossMusic;
+    [Header("Music Clip")]
+    public AudioClip backgroundMusic;
 
     AudioSource audioSource;
 
@@ -24,24 +23,11 @@ public class BackgroundMusic : MonoBehaviour
 
         audioSource = GetComponent<AudioSource>();
 
-        PlayNormalMusic();
-    }
-
-    public void PlayNormalMusic()
-    {
-        if (audioSource.clip == normalMusic) return;
-
-        audioSource.clip = normalMusic;
-        audioSource.loop = true;
-        audioSource.Play();
-    }
-
-    public void PlayBossMusic()
-    {
-        if (audioSource.clip == bossMusic) return;
-
-        audioSource.clip = bossMusic;
-        audioSource.loop = true;
-        audioSource.Play();
+        if (backgroundMusic != null)
+        {
+            audioSource.clip = backgroundMusic;
+            audioSource.loop = true;
+            audioSource.Play();
+        }
     }
 }

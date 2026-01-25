@@ -15,7 +15,7 @@ public class ScoreManager : MonoBehaviour
         }
 
         Instance = this;
-        // Optional: DontDestroyOnLoad(gameObject); // Keep score between scenes
+        Debug.Log("ScoreManager Initialized!");
     }
 
     public System.Action<int> OnScoreChanged; // [NEW] Event for UI update

@@ -82,13 +82,24 @@ public class PlayerCombat : MonoBehaviour
 
         HandleFacingDirection();
 
-        // 🛡️ BLOCK (RIGHT CLICK – TRIGGER)
+        // 🛡️ BLOCK (RIGHT CLICK – HOLD)
         if (Input.GetMouseButtonDown(1))
         {
             isBlocking = true;
+            animator.SetBool("IdleBlock", true); // Trigger looping block animation
             animator.SetTrigger("Block");
             PlaySound(blockSFX);
         }
+        
+        if (Input.GetMouseButtonUp(1))
+        {
+            isBlocking = false;
+            animator.SetBool("IdleBlock", false);
+        }
+
+        // Prevent attacking while blocking
+        bool blockHeld = Input.GetMouseButton(1);
+        isBlocking = blockHeld;
 
         // ⚔️ ATTACK
         if (Input.GetButtonDown("Fire1") && !isAttacking && !isBlocking)
@@ -158,7 +169,10 @@ public class PlayerCombat : MonoBehaviour
     public void EndAttack()
     {
         isAttacking = false;
-        isBlocking = false; // 🔓 reset block
+        
+        // Only reset block if not still holding the button
+        if (!Input.GetMouseButton(1))
+            isBlocking = false; 
 
         if (Time.time - lastAttackTime > comboResetTime)
             comboIndex = 0;
@@ -170,10 +184,10 @@ public class PlayerCombat : MonoBehaviour
     {
         if (isDead) return;
 
-        // 🛡️ BLOCK CONSUMES ONE HIT
+        // 🛡️ BLOCK NEGATES DAMAGE
         if (isBlocking)
         {
-            isBlocking = false;
+            animator.SetTrigger("Block"); // Play block impact
             return; // ❌ no damage
         }
 
