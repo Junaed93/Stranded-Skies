@@ -7,31 +7,88 @@ public class BossHealthUI : MonoBehaviour
 
     public Slider healthBar;
 
+    [Header("HUD elements to hide")]
+    public GameObject playerHUD;
+    public GameObject scoreHUD;
+
+    private CanvasGroup canvasGroup;
+    private MonoBehaviour activeBoss;
+    private float closestDistance = float.MaxValue;
+    private bool bossReportedThisFrame = false;
+
     void Awake()
     {
-        // Singleton setup
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
         Instance = this;
-        
+
+        canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+    }
+
+    void Start()
+    {
         Hide();
     }
 
-    public void Show()
+    void LateUpdate()
     {
-        gameObject.SetActive(true);
+        // If no boss reported being in range this frame, hide the UI
+        if (!bossReportedThisFrame)
+        {
+            activeBoss = null;
+            Hide();
+        }
+
+        // Reset for next frame
+        bossReportedThisFrame = false;
+        closestDistance = float.MaxValue;
     }
 
-    public void Hide()
+    public void ReportProximity(MonoBehaviour boss, float distance, int currentHealth, int maxHealth)
     {
-        if (this != null && gameObject != null)
-            gameObject.SetActive(false);
+        bossReportedThisFrame = true;
+
+        // Only show the CLOSEST boss if multiple are nearby
+        if (activeBoss == null || distance < closestDistance)
+        {
+            activeBoss = boss;
+            closestDistance = distance;
+            
+            Show();
+            UpdateHealth(currentHealth, maxHealth);
+        }
     }
 
-    public void UpdateHealth(int current, int max)
+    private void Show()
+    {
+        if (canvasGroup == null) return;
+        
+        canvasGroup.alpha = 1f;
+        canvasGroup.blocksRaycasts = true;
+        canvasGroup.interactable = true;
+        
+        if (playerHUD != null && playerHUD.activeSelf) playerHUD.SetActive(false);
+        if (scoreHUD != null && scoreHUD.activeSelf) scoreHUD.SetActive(false);
+    }
+
+    private void Hide()
+    {
+        if (canvasGroup == null) return;
+
+        canvasGroup.alpha = 0f;
+        canvasGroup.blocksRaycasts = false;
+        canvasGroup.interactable = false;
+        
+        if (playerHUD != null && !playerHUD.activeSelf) playerHUD.SetActive(true);
+        if (scoreHUD != null && !scoreHUD.activeSelf) scoreHUD.SetActive(true);
+    }
+
+    private void UpdateHealth(int current, int max)
     {
         if (healthBar != null)
         {

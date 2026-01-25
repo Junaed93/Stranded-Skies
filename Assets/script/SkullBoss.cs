@@ -51,13 +51,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         if (groundLayer == 0)
             groundLayer = LayerMask.GetMask("Ground");
-
-        // [NEW] Show Boss UI
-        if (BossHealthUI.Instance != null)
-        {
-            BossHealthUI.Instance.Show();
-            BossHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
-        }
     }
 
     void Update()
@@ -71,6 +64,12 @@ public class SkullBoss : MonoBehaviour, IDamageable
         {
             StopMoving();
             return;
+        }
+
+        // [NEW] Report Proximity to Boss UI
+        if (BossHealthUI.Instance != null)
+        {
+            BossHealthUI.Instance.ReportProximity(this, distance, currentHealth, maxHealth);
         }
 
         // ✅ ALWAYS face player when detected
@@ -247,10 +246,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
             col.enabled = false;
 
         animator.SetTrigger("Death");
-
-        // [NEW] Hide Boss UI
-        if (BossHealthUI.Instance != null)
-            BossHealthUI.Instance.Hide();
 
         if (bossWall != null)
             bossWall.DestroyWall();

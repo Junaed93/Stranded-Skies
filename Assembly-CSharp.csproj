@@ -67,6 +67,7 @@
     <Compile Include="Assets\script\EnemyController.cs" />
     <Compile Include="Assets\script\SkullBoss.cs" />
     <Compile Include="Assets\script\GolemSpawner.cs" />
+    <Compile Include="Assets\script\BossHealthUI.cs" />
     <Compile Include="Assets\script\BackgroundMusic.cs" />
     <Compile Include="Assets\script\CameraFollow.cs" />
     <Compile Include="Assets\script\ScoreUI.cs" />
