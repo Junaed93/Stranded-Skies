@@ -7,6 +7,10 @@ public class BossHealthUI : MonoBehaviour
 
     public Slider healthBar;
 
+    [Header("HUD elements")]
+    public GameObject playerHUD;
+    public GameObject scoreHUD;
+
     private CanvasGroup canvasGroup;
     private MonoBehaviour activeBoss;
     private float closestDistance = float.MaxValue;
@@ -28,6 +32,10 @@ public class BossHealthUI : MonoBehaviour
 
     void Start()
     {
+        // Force the player HUD and Score to be visible when the game starts
+        if (playerHUD != null) playerHUD.SetActive(true);
+        if (scoreHUD != null) scoreHUD.SetActive(true);
+
         Hide();
     }
 
@@ -67,6 +75,10 @@ public class BossHealthUI : MonoBehaviour
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
         canvasGroup.interactable = true;
+        
+        // Hide regular HUD during boss fight
+        if (playerHUD != null && playerHUD.activeSelf) playerHUD.SetActive(false);
+        if (scoreHUD != null && scoreHUD.activeSelf) scoreHUD.SetActive(false);
     }
 
     private void Hide()
@@ -76,6 +88,10 @@ public class BossHealthUI : MonoBehaviour
         canvasGroup.alpha = 0f;
         canvasGroup.blocksRaycasts = false;
         canvasGroup.interactable = false;
+        
+        // Show regular HUD when no boss is around
+        if (playerHUD != null && !playerHUD.activeSelf) playerHUD.SetActive(true);
+        if (scoreHUD != null && !scoreHUD.activeSelf) scoreHUD.SetActive(true);
     }
 
     public void UpdateHealth(int current, int max)
