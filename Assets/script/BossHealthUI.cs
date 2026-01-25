@@ -77,11 +77,4 @@ public class BossHealthUI : MonoBehaviour
     }
 }
 
-    public void UpdateHealth(int current, int max)
-    {
-        if (healthBar != null)
-        {
-            healthBar.value = (float)current / max;
-        }
-    }
-}
+

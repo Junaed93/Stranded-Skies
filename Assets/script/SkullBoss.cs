@@ -8,6 +8,12 @@ public class SkullBoss : MonoBehaviour, IDamageable
     public Rigidbody2D rb;
     public BossWall bossWall;
 
+    [Header("Audio")]
+    public AudioSource audioSource;
+    public AudioClip[] attackSounds;
+    public AudioClip hurtSound;
+    public AudioClip deathSound;
+
     [Header("Health")]
     public int maxHealth = 200;
     int currentHealth;
@@ -45,6 +51,7 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
 
         rb.freezeRotation = true;
         rb.gravityScale = 1f;
@@ -118,6 +125,13 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         animator.SetBool("Run", false);
         animator.SetTrigger("Attack");
+
+        // Play Random Attack Sound
+        if (attackSounds.Length > 0 && audioSource != null)
+        {
+            AudioClip clip = attackSounds[Random.Range(0, attackSounds.Length)];
+            audioSource.PlayOneShot(clip);
+        }
 
         Invoke(nameof(EndAttack), 1.2f);
     }
@@ -214,6 +228,10 @@ public class SkullBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
+        // Play Hurt Sound
+        if (hurtSound != null && audioSource != null)
+            audioSource.PlayOneShot(hurtSound);
+
         // [NEW] Phase 1 score at 50% HP
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
@@ -242,6 +260,10 @@ public class SkullBoss : MonoBehaviour, IDamageable
             col.enabled = false;
 
         animator.SetTrigger("Death");
+
+        // Play Death Sound
+        if (deathSound != null && audioSource != null)
+            audioSource.PlayOneShot(deathSound);
 
         if (bossWall != null)
             bossWall.DestroyWall();
