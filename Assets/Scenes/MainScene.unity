@@ -18887,7 +18887,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 917671842}
-  m_BodyType: 0
+  m_BodyType: 2
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -43582,11 +43582,11 @@ PrefabInstance:
       objectReference: {fileID: 2102097180}
     - target: {fileID: 6629681673114807440, guid: 3e90e2d5a36406a42b634357315432db, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 531.37
+      value: -46.52
       objectReference: {fileID: 0}
     - target: {fileID: 6629681673114807440, guid: 3e90e2d5a36406a42b634357315432db, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.57
+      value: -1.61
       objectReference: {fileID: 0}
     - target: {fileID: 6629681673114807440, guid: 3e90e2d5a36406a42b634357315432db, type: 3}
       propertyPath: m_LocalPosition.z
