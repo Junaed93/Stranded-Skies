@@ -5,16 +5,10 @@ public class BossHealthUI : MonoBehaviour
 {
     public static BossHealthUI Instance;
 
-    public Slider healthBar;
+    public Slider healthBar; // The Slider component
 
-    [Header("HUD elements")]
-    public GameObject playerHUD;
-    public GameObject scoreHUD;
-
-    private CanvasGroup canvasGroup;
-    private MonoBehaviour activeBoss;
-    private float closestDistance = float.MaxValue;
-    private bool bossReportedThisFrame = false;
+    private float hideTimer = 0f;
+    private bool isVisible = false;
 
     void Awake()
     {
@@ -24,75 +18,64 @@ public class BossHealthUI : MonoBehaviour
             return;
         }
         Instance = this;
-
-        canvasGroup = GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-            canvasGroup = gameObject.AddComponent<CanvasGroup>();
     }
 
     void Start()
     {
-        // Force the player HUD and Score to be visible when the game starts
-        if (playerHUD != null) playerHUD.SetActive(true);
-        if (scoreHUD != null) scoreHUD.SetActive(true);
-
-        Hide();
+        // Ensure the bar starts hidden
+        if (healthBar != null) 
+            healthBar.gameObject.SetActive(false);
     }
 
-    void LateUpdate()
+    void Update()
     {
-        // If no boss reported being in range this frame, hide the UI
-        if (!bossReportedThisFrame)
+        // Auto-hide logic: If no report received for 0.1s, hide it.
+        // This is more robust than LateUpdate frame-perfect logic for some setups.
+        if (isVisible)
         {
-            activeBoss = null;
-            Hide();
+            hideTimer += Time.deltaTime;
+            if (hideTimer > 0.1f)
+            {
+                Hide();
+            }
         }
-
-        // Reset for next frame
-        bossReportedThisFrame = false;
-        closestDistance = float.MaxValue;
     }
 
     public void ReportProximity(MonoBehaviour boss, float distance, int currentHealth, int maxHealth)
     {
-        bossReportedThisFrame = true;
-
-        // Only show the CLOSEST boss if multiple are nearby
-        if (activeBoss == null || distance < closestDistance)
-        {
-            activeBoss = boss;
-            closestDistance = distance;
-            
-            Show();
-            UpdateHealth(currentHealth, maxHealth);
-        }
+        // Reset hide timer because a boss is claiming usage
+        hideTimer = 0f;
+        
+        Show();
+        UpdateHealth(currentHealth, maxHealth);
     }
 
     private void Show()
     {
-        if (canvasGroup == null) return;
-        
-        canvasGroup.alpha = 1f;
-        canvasGroup.blocksRaycasts = true;
-        canvasGroup.interactable = true;
-        
-        // Hide regular HUD during boss fight
-        if (playerHUD != null && playerHUD.activeSelf) playerHUD.SetActive(false);
-        if (scoreHUD != null && scoreHUD.activeSelf) scoreHUD.SetActive(false);
+        if (!isVisible)
+        {
+            isVisible = true;
+            if (healthBar != null) healthBar.gameObject.SetActive(true);
+        }
     }
 
     private void Hide()
     {
-        if (canvasGroup == null) return;
-
-        canvasGroup.alpha = 0f;
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.interactable = false;
-        
-        // Show regular HUD when no boss is around
-        if (playerHUD != null && !playerHUD.activeSelf) playerHUD.SetActive(true);
-        if (scoreHUD != null && !scoreHUD.activeSelf) scoreHUD.SetActive(true);
+        if (isVisible)
+        {
+            isVisible = false;
+            if (healthBar != null) healthBar.gameObject.SetActive(false);
+        }
     }
+
+    public void UpdateHealth(int current, int max)
+    {
+        if (healthBar != null)
+        {
+            healthBar.value = (float)current / max;
+        }
+    }
+}
 
     public void UpdateHealth(int current, int max)
     {
