@@ -3330,7 +3330,7 @@ MonoBehaviour:
   enemyDetectionRadius: 6
   enemyLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
 --- !u!1 &527078867
 GameObject:
   m_ObjectHideFlags: 0
