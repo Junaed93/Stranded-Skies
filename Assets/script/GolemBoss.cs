@@ -51,6 +51,13 @@ public class GolemBoss : MonoBehaviour, IDamageable
 
         if (groundLayer == 0)
             groundLayer = LayerMask.GetMask("Ground");
+
+        // [NEW] Show Boss UI
+        if (BossHealthUI.Instance != null)
+        {
+            BossHealthUI.Instance.Show();
+            BossHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+        }
     }
 
     void Update()
@@ -204,6 +211,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
+        // [NEW] Update Boss UI
+        if (BossHealthUI.Instance != null)
+            BossHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
+
         // [NEW] Phase 1 score at 50% HP (Golem: 100 pts)
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
@@ -232,6 +243,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
             col.enabled = false;
 
         animator.SetTrigger("Death");
+
+        // [NEW] Hide Boss UI
+        if (BossHealthUI.Instance != null)
+            BossHealthUI.Instance.Hide();
 
         if (bossWall != null)
             bossWall.DestroyWall();
