@@ -210,10 +210,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
-        // [NEW] Update Boss UI
-        if (BossHealthUI.Instance != null)
-            BossHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
-
         // [NEW] Phase 1 score at 50% HP (Golem: 100 pts)
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {

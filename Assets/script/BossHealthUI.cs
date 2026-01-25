@@ -88,7 +88,7 @@ public class BossHealthUI : MonoBehaviour
         if (scoreHUD != null && !scoreHUD.activeSelf) scoreHUD.SetActive(true);
     }
 
-    private void UpdateHealth(int current, int max)
+    public void UpdateHealth(int current, int max)
     {
         if (healthBar != null)
         {

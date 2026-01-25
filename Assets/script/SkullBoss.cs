@@ -214,10 +214,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
-        // [NEW] Update Boss UI
-        if (BossHealthUI.Instance != null)
-            BossHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
-
         // [NEW] Phase 1 score at 50% HP
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
