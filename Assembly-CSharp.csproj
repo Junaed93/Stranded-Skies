@@ -72,7 +72,6 @@
     <Compile Include="Assets\script\EnemyAttack.cs" />
     <Compile Include="Assets\script\PauseMenuMP.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
-    <Compile Include="Assets\script\BootLoader.cs" />
     <Compile Include="Assets\script\GolemBoss.cs" />
     <Compile Include="Assets\script\EnemyController.cs" />
     <Compile Include="Assets\script\SkullBoss.cs" />

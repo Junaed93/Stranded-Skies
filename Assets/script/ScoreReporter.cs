@@ -28,6 +28,40 @@ public class ScoreReporter : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // [AUTO-DETECT TOKEN]
+        // 1. WebGL: Check URL Query Params
+        // 2. Desktop: Check Command Line Args
+        string token = GetTokenFromUrlOrArgs();
+        if (!string.IsNullOrEmpty(token))
+        {
+            authToken = token;
+            Debug.Log($"[ScoreReporter] Auto-Detected Auth Token: {authToken.Substring(0, Mathf.Min(5, authToken.Length))}...");
+        }
+    }
+
+    private string GetTokenFromUrlOrArgs()
+    {
+        // 1. Try WebGL URL (e.g. http://game.com?token=XYZ)
+        string url = Application.absoluteURL;
+        if (!string.IsNullOrEmpty(url) && url.Contains("?"))
+        {
+            var query = System.Web.HttpUtility.ParseQueryString(new System.Uri(url).Query);
+            if (!string.IsNullOrEmpty(query.Get("token"))) return query.Get("token");
+            if (!string.IsNullOrEmpty(query.Get("auth"))) return query.Get("auth");
+        }
+
+        // 2. Try Command Line (e.g. game.exe --auth-token XYZ)
+        string[] args = System.Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            if ((args[i] == "--auth-token" || args[i] == "-t") && i + 1 < args.Length)
+            {
+                return args[i + 1];
+            }
+        }
+
+        return "";
     }
 
     public string authToken = ""; // Set by Launcher or Login Scene
@@ -71,6 +105,9 @@ public class ScoreReporter : MonoBehaviour
 
         data.timestamp = DateTime.UtcNow.ToString("o"); // ISO 8601
         data.playerId = "LocalPlayer"; // Stub
+
+        // Convert to JSON
+        string jsonPayload = JsonUtility.ToJson(data, true);
 
         // Send Data to Backend
         StartCoroutine(PostScore(jsonPayload));

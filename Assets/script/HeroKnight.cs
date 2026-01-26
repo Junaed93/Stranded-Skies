@@ -42,10 +42,13 @@ public class HeroKnightController : MonoBehaviour
             Vector2 velocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
             rb.linearVelocity = velocity;
 
-            // Multiplayer: Send Movement Intent (Stub)
+            // Multiplayer: Send Movement Intent
             if (GameSession.Instance.mode == GameMode.Multiplayer)
             {
-               // NetworkManager.Instance.SendMove(transform.position, velocity);
+               if (SocketClient.Instance != null && Time.frameCount % 5 == 0) // Send every 5 frames (~12 updates/sec)
+               {
+                   SocketClient.Instance.SendMove(transform.position.x, transform.position.y, velocity.x, grounded);
+               }
             }
 
 

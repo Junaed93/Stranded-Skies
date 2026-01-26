@@ -27,7 +27,9 @@ public class CameraFollow : MonoBehaviour
         Debug.Log("[CameraFollow] Started - waiting for player");
     }
 
-    void LateUpdate()
+    private Vector3 velocity = Vector3.zero; // For SmoothDamp
+
+    void FixedUpdate()
     {
         // Auto-find player if not assigned
         if (target == null)
@@ -38,25 +40,21 @@ public class CameraFollow : MonoBehaviour
                 target = player.transform;
                 Debug.Log("[CameraFollow] Found player: " + player.name);
             }
-            else
-            {
-                // Only log occasionally to avoid spam
-                if (Time.frameCount % 60 == 0)
-                    Debug.Log("[CameraFollow] Still searching for Player tag...");
-            }
             return;
         }
 
         // Follow the target
-        Vector3 desiredPosition = target.position + offset;
+        Vector3 targetPosition = target.position + offset;
         
         if (enableLimits)
         {
-            desiredPosition.y = Mathf.Clamp(desiredPosition.y, minY, maxY);
+            targetPosition.y = Mathf.Clamp(targetPosition.y, minY, maxY);
         }
 
-        desiredPosition.z = -10; 
-        transform.position = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
+        targetPosition.z = -10; 
+        
+        // Use SmoothDamp instead of Lerp for jitter-free movement
+        transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothSpeed);
 
         // 2. Dynamic Zoom
         HandleZoom();

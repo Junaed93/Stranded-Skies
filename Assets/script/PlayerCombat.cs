@@ -303,7 +303,7 @@ public class PlayerCombat : MonoBehaviour, IDamageable
                 tempReporter.ReportGameOver();
             }
 
-            GameOverPanel gameOver = FindObjectOfType<GameOverPanel>();
+            GameOverPanel gameOver = FindFirstObjectByType<GameOverPanel>();
             if (gameOver != null)
             {
                 gameOver.Show();

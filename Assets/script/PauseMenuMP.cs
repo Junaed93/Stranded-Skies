@@ -37,7 +37,7 @@ public class PauseMenuMP : MonoBehaviour
 
     void DisablePlayerInput(bool disable)
     {
-        PlayerCombat pc = FindObjectOfType<PlayerCombat>();
+        PlayerCombat pc = FindFirstObjectByType<PlayerCombat>();
         if (pc != null)
             pc.enabled = !disable;
     }

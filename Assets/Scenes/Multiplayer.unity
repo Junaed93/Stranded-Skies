@@ -1873,7 +1873,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SocketClient
   serverUrl: ws://localhost:8080/game
-  isConnected: 1
+  remotePlayerPrefab: {fileID: 1676605972035233711, guid: ed868fe51b704ea4f9386168dce9e3d4, type: 3}
 --- !u!1 &1953021821
 GameObject:
   m_ObjectHideFlags: 0

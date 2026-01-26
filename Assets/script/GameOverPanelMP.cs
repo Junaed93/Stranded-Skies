@@ -17,7 +17,7 @@ public class GameOverPanelMP : MonoBehaviour
 
     void DisablePlayerInput()
     {
-        PlayerCombat pc = FindObjectOfType<PlayerCombat>();
+        PlayerCombat pc = FindFirstObjectByType<PlayerCombat>();
         if (pc != null)
             pc.enabled = false;
     }
