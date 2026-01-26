@@ -1,14 +1,20 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Collections.Generic;
 
-
+/// <summary>
+/// WorldGenerator.cs
+/// Scan-and-fill infinite world generation.
+/// Fills exact gaps in the world to ensure continuous ground.
+/// Used ONLY in Multiplayer.scene.
+/// </summary>
 public class WorldGenerator : MonoBehaviour
 {
     public static WorldGenerator Instance { get; private set; }
 
     [Header("Generation Settings")]
     [Tooltip("Radius around player to ensure ground exists")]
-    public int generateRadius = 40;
+    public int generateRadius = 60;
 
     [Tooltip("How often to run the generator (seconds)")]
     public float updateInterval = 0.5f;
@@ -47,28 +53,62 @@ public class WorldGenerator : MonoBehaviour
 
     void Start()
     {
+        // Safety Checks
+        if (groundTile == null) Debug.LogError("[WorldGenerator] CRITICAL: Ground Tile is missing! Assign it in Inspector.");
+        if (groundTilemap == null) Debug.LogError("[WorldGenerator] CRITICAL: Ground Tilemap is missing! Assign it in Inspector.");
+
         // Auto-detect ground level from existing tiles
+        // Scans a range around X=0 to avoid missing the ground if X=0 is empty
         if (autoDetectGroundY && groundTilemap != null)
         {
             groundTilemap.CompressBounds();
             BoundsInt bounds = groundTilemap.cellBounds;
             
             bool found = false;
-            // Scan from bottom up to find the surface
-            for (int y = bounds.yMax; y >= bounds.yMin; y--)
+            
+            // Scan X range from -20 to 20 to find ground
+            int scanRange = 20;
+            for (int x = -scanRange; x <= scanRange; x++)
             {
-                for (int x = bounds.xMin; x < bounds.xMax; x++)
+                // Scan from top down to find top-most ground tile
+                int startY = Mathf.Min(10, bounds.yMax); 
+                int endY = Mathf.Max(-20, bounds.yMin);
+
+                for (int y = startY; y >= endY; y--)
                 {
                     if (groundTilemap.HasTile(new Vector3Int(x, y, 0)))
                     {
                         groundLevel = y;
                         found = true;
-                        Debug.Log($"[WorldGenerator] Auto-detected ground level at Y={groundLevel}");
-                        goto FoundLevel;
+                        Debug.Log($"[WorldGenerator] Auto-detected ground level at Y={groundLevel} (found at x={x})");
+                        goto GroundFound;
                     }
                 }
             }
-            FoundLevel:;
+            
+            GroundFound:
+            if (!found)
+            {
+                Debug.LogWarning($"[WorldGenerator] Could not auto-detect ground in range x=-{scanRange} to {scanRange}.");
+                
+                // Fallback: Use player position if available
+                if (target != null)
+                {
+                    // Assuming player pivot is at feet/center, ground is usually 1 unit below
+                    groundLevel = Mathf.FloorToInt(target.position.y - 1.5f); 
+                    Debug.Log($"[WorldGenerator] FORCING ground level to Player Y ({target.position.y}) - 1.5 => Y={groundLevel}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[WorldGenerator] Using default groundLevel: Y={groundLevel}");
+                }
+            }
+        }
+        else if (groundTilemap != null && target != null && !autoDetectGroundY)
+        {
+             // If auto-detect is OFF, still try to align with player just in case default is wrong
+             // Uncomment if you want this behavior:
+             // groundLevel = Mathf.FloorToInt(target.position.y - 1f);
         }
 
         // Initial generation around origin

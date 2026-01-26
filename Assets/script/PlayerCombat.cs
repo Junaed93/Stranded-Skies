@@ -173,7 +173,7 @@ public class PlayerCombat : MonoBehaviour
         else
         {
             // Multiplayer: Only send intent, do not apply damage locally
-            PlayerNetworkSender.SendAttack();
+            // PlayerNetworkSender.SendAttack();
         }
     }
 

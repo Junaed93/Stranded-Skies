@@ -144,7 +144,7 @@ public class EnemyAI : MonoBehaviour
             else
             {
                 // Multiplayer: Request damage from server instead of applying directly
-                PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
+                // PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
             }
         }
     }

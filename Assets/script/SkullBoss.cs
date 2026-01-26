@@ -171,7 +171,7 @@ public class SkullBoss : MonoBehaviour, IDamageable
             else
             {
                 // Multiplayer: Request damage from server
-                PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
+                // PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
                 hasDealtDamage = true;
             }
         }

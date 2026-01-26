@@ -1481,7 +1481,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1548592312}
-  - component: {fileID: 1548592311}
+  - component: {fileID: 1548592313}
   m_Layer: 0
   m_Name: WorldGenerator
   m_TagString: Untagged
@@ -1489,25 +1489,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1548592311
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1548592310}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd62bfd3960a16240a7c875e875b912b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WorldGenerator
-  chunkSize: 20
-  renderDistance: 3
-  groundTile: {fileID: 11400000, guid: 532313e6c2e8a22469b956f384ef352e, type: 2}
-  groundLevel: -2
-  groundDepth: 1
-  groundTilemap: {fileID: 1694650648}
-  target: {fileID: 0}
 --- !u!4 &1548592312
 Transform:
   m_ObjectHideFlags: 0
@@ -1523,6 +1504,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1548592313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1548592310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd62bfd3960a16240a7c875e875b912b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldGenerator
+  generateRadius: 60
+  updateInterval: 0.5
+  groundTile: {fileID: 0}
+  groundLevel: -1
+  groundDepth: 3
+  autoDetectGroundY: 1
+  groundTilemap: {fileID: 1694650648}
+  target: {fileID: 0}
 --- !u!1 &1604416419
 GameObject:
   m_ObjectHideFlags: 0
@@ -1622,7 +1623,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1613450111}
-  - component: {fileID: 1613450110}
+  - component: {fileID: 1613450112}
   m_Layer: 7
   m_Name: EnemySpawner
   m_TagString: Enemy
@@ -1630,27 +1631,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1613450110
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1613450109}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e887666dae6a4d144923d8264a1c73ad, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
-  enemyPrefabs:
-  - {fileID: 4386701601823488166, guid: a53673783bfe20b4293b34a8daac2be8, type: 3}
-  minSpawnDistance: 10
-  maxSpawnDistance: 25
-  spawnInterval: 5
-  maxEnemies: 10
-  spawnGroundY: -1
-  target: {fileID: 0}
-  enemiesParent: {fileID: 2004755740}
 --- !u!4 &1613450111
 Transform:
   m_ObjectHideFlags: 0
@@ -1666,6 +1646,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1613450112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1613450109}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5444c5c28d7635447a8d4be05449811e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyKillTracker
+  totalKills: 0
 --- !u!1 &1646852020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2217,6 +2210,11 @@ MonoBehaviour:
   killsToSpawnBoss: 20
   bossSpawnDistance: 15
   bossSpawnY: -1
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  raycastStartHeight: 20
+  maxRaycastDistance: 50
   target: {fileID: 0}
   bossesParent: {fileID: 757553665}
 --- !u!4 &2001467600
