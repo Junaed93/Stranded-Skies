@@ -26,8 +26,9 @@ public class Health : MonoBehaviour
         }
         else
         {
-            // Multiplayer: Intent only, actual damage applied via external call (NetworkApplyDamage stub)
-            Debug.Log($"[Multiplayer] {gameObject.name} damage requested ({damage}) but not applied locally.");
+            // Multiplayer: Request damage from server. Do NOT apply locally yet.
+            // NetworkManager.Instance.SendPlayerDamage(damage); 
+            Debug.Log($"[Multiplayer] Player took {damage} damage (Visual). Waiting for server to apply.");
         }
     }
 

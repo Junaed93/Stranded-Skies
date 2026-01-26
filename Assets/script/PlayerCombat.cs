@@ -172,18 +172,23 @@ public class PlayerCombat : MonoBehaviour, IDamageable
              // Don't hit yourself
              if (enemy.gameObject == gameObject) continue;
 
-             // Use Central Combat System
-             if (CombatSystem.Instance != null && GameModeManager.Instance.IsMultiplayer())
+             if (GameSession.Instance.mode == GameMode.SinglePlayer)
              {
-                  CombatSystem.Instance.RequestDamage(enemy.gameObject, attackDamage);
+                 // Singleplayer: Immediate Authority
+                 if (enemy.TryGetComponent(out IDamageable damageable))
+                 {
+                     damageable.TakeDamage(attackDamage);
+                     PlaySound(swordHitSFX);
+                     Debug.Log($"[PlayerCombat] HIT {enemy.name} for {attackDamage} damage.");
+                 }
              }
-             // Fallback / Singleplayer
-             else if (enemy.TryGetComponent(out IDamageable damageable))
-            {
-                damageable.TakeDamage(attackDamage);
-                PlaySound(swordHitSFX);
-                Debug.Log($"[PlayerCombat] HIT {enemy.name} for {attackDamage} damage.");
-            }
+             else
+             {
+                 // Multiplayer: Intent Only
+                 // Stub: NetworkManager.Instance.SendAttack(enemy.name, attackDamage);
+                 Debug.Log($"[Multiplayer] Attacked {enemy.name}. Visuals only. Waiting for server to apply damage.");
+                 PlaySound(swordHitSFX); // Play sound locally for feedback
+             }
         }
     }
 

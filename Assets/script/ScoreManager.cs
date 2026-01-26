@@ -28,9 +28,9 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-            // Multiplayer: Typically scores are confirmed by the server
+            // Multiplayer: Do NOT apply score locally.
+            // RequestScoreChange(amount); // Stub
             Debug.Log($"[Multiplayer] Score addition requested ({amount}) but waiting for server confirmation.");
-            // ApplyScore(amount); // Uncomment if you want optimistic updates
         }
     }
 
