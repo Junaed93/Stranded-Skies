@@ -91,7 +91,6 @@
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemyTest.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemySelector.cs" />
     <Compile Include="Assets\script\EnemyAI.cs" />
-    <Compile Include="Assets\script\GameManager.cs" />
     <Compile Include="Assets\script\SocketReceiver.cs" />
     <Compile Include="Assets\script\ParallaxController.cs" />
     <Compile Include="Assets\script\CrabBoss.cs" />

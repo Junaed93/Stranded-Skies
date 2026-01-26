@@ -118,7 +118,7 @@ public class ScoreReporter : MonoBehaviour
     /// </summary>
     private System.Collections.IEnumerator PostScore(string json)
     {
-        string url = "http://localhost:3000/api/scores"; // [CONFIG] Backend URL
+        string url = "http://localhost:8080/api/scores"; // [CONFIG] Backend URL
 
         Debug.Log($"[ScoreReporter] Posting Score to {url}...");
 

@@ -12,7 +12,7 @@ public class SocketClient : MonoBehaviour
 
     [Header("Connection Settings")]
     [Tooltip("WebSocket server URL (e.g., ws://localhost:3000/game)")]
-    public string serverUrl = "ws://localhost:3000/game";
+    public string serverUrl = "ws://localhost:8080/game";
 
     [Header("References")]
     public GameObject remotePlayerPrefab; // ASSIGN IN INSPECTOR
