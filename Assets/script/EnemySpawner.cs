@@ -60,24 +60,33 @@ public class EnemySpawner : MonoBehaviour
         Instance = this;
     }
 
+    private bool spawningEnabled = false;
+
+    public void EnableSpawning(bool enable)
+    {
+        spawningEnabled = enable;
+        Debug.Log($"[EnemySpawner] Spawning Enabled: {enable}");
+        
+        // Reset timers
+        if (enable) nextSpawnTime = Time.time + spawnInterval;
+    }
+
     void Start()
     {
-        nextSpawnTime = Time.time + spawnInterval;
+        // NOTE: In Multiplayer, we start disabled.
+        // Bootstrap calls EnableSpawning(true).
         
-        // AUTO-FIX: If groundLayer is 0 or just "Ground", add "Default" to it
-        // This failsafe ensures we hit the collider even if Layer isn't set perfectly
+        // Auto-fix layers (keep this)
         if (groundLayer == 0)
         {
             groundLayer = LayerMask.GetMask("Ground", "Default");
-            Debug.Log("[EnemySpawner] Auto-set Ground Layer to: Ground + Default");
         }
         else if (groundLayer == LayerMask.GetMask("Ground"))
         {
              groundLayer |= LayerMask.GetMask("Default");
-             Debug.Log("[EnemySpawner] Extended Ground Layer to include Default");
         }
             
-        Debug.Log("[EnemySpawner] Started");
+        Debug.Log("[EnemySpawner] Initialized (Waiting for Enable)");
     }
 
     void Update()

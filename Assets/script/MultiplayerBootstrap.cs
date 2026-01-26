@@ -8,57 +8,66 @@ using UnityEngine;
 public class MultiplayerBootstrap : MonoBehaviour
 {
     [Header("References")]
-    [Tooltip("Reference to the GameSession singleton for mode verification")]
-    public GameSession gameSession;
+    public WorldGenerator worldGenerator;
+    public PlayerSpawner playerSpawner;
+    public EnemySpawner enemySpawner;
+    public BossSpawnManager bossSpawner;
 
     void Start()
     {
-        // Verify we are in multiplayer mode
-        if (GameSession.Instance == null)
-        {
-            Debug.LogError("[MultiplayerBootstrap] GameSession.Instance is null! Make sure GameSession exists in the scene.");
-            return;
-        }
+        Debug.Log("[MultiplayerBootstrap] Initializing...");
 
-        if (GameSession.Instance.mode != GameMode.Multiplayer)
-        {
-            Debug.LogWarning("[MultiplayerBootstrap] GameSession.mode is not Multiplayer. Switching to Multiplayer mode.");
-            GameSession.Instance.mode = GameMode.Multiplayer;
-        }
+        // 1. Force Mode
+        if (GameModeManager.Instance != null)
+             GameModeManager.Instance.currentMode = GameMode.Multiplayer;
 
-        Debug.Log("[MultiplayerBootstrap] Multiplayer Ready");
+        // 2. Initialize Server
+        if (FakeServer.Instance == null)
+             gameObject.AddComponent<FakeServer>();
 
-        // =====================================================
-        // TODO: Future WebSocket Connection (Stub)
-        // =====================================================
-        // ConnectToServer();
-        // JoinRoom(roomId);
-        // =====================================================
+        // 3. Subscribe to Events
+        FakeServer.Instance.OnSeedReceived += HandleSeedReceived;
+        FakeServer.Instance.OnBossSpawnCommand += HandleBossSpawn;
+
+        // 4. Connect
+        FakeServer.Instance.Connect();
     }
 
-    // =====================================================
-    // STUB: Socket Connection Methods
-    // These will be implemented when WebSocket integration is added.
-    // =====================================================
-
-    /// <summary>
-    /// Connects to the WebSocket server.
-    /// </summary>
-    private void ConnectToServer()
+    void HandleSeedReceived(int seed)
     {
-        // TODO: Implement WebSocket connection to Spring Boot backend
-        // Example: SocketClient.Instance.Connect("ws://localhost:8080/game");
-        Debug.Log("[MultiplayerBootstrap] ConnectToServer() - Stub called");
+        Debug.Log($"[MultiplayerBootstrap] Seed Received: {seed}. Starting World Gen.");
+        
+        // 5. Start World Gen
+        if (worldGenerator != null)
+        {
+            worldGenerator.InitializeWorld(seed, OnWorldReady);
+        }
     }
 
-    /// <summary>
-    /// Joins a multiplayer room/session.
-    /// </summary>
-    /// <param name="roomId">The room ID to join</param>
-    private void JoinRoom(string roomId)
+    void OnWorldReady()
     {
-        // TODO: Send room join request to server
-        // Example: SocketClient.Instance.Send(new JoinRoomMessage(roomId));
-        Debug.Log($"[MultiplayerBootstrap] JoinRoom({roomId}) - Stub called");
+        Debug.Log("[MultiplayerBootstrap] World Ready. Spawning Player.");
+
+        // 6. Spawn Player logic
+        if (playerSpawner != null && worldGenerator != null)
+        {
+            Vector3 spawnPos = worldGenerator.GetSafeSpawnPosition();
+            playerSpawner.SpawnPlayerAt(spawnPos);
+        }
+
+        // 7. Enable Enemy Spawning
+        if (enemySpawner != null)
+        {
+            enemySpawner.EnableSpawning(true);
+        }
+    }
+
+    void HandleBossSpawn()
+    {
+        Debug.Log("[MultiplayerBootstrap] Boss Command Received. Spawning Boss.");
+        if (bossSpawner != null && playerSpawner.localPlayerInstance != null)
+        {
+            bossSpawner.SpawnBoss(playerSpawner.localPlayerInstance.transform);
+        }
     }
 }

@@ -27,6 +27,29 @@ public class PlayerSpawner : MonoBehaviour
     void Start()
     {
         Debug.Log("[PlayerSpawner] Start called");
+        
+        // In SinglePlayer, we might spawn automatically.
+        // In Multiplayer, we WAIT for Bootstrap.
+        if (GameModeManager.Instance != null && GameModeManager.Instance.IsMultiplayer())
+        {
+            Debug.Log("[PlayerSpawner] Multiplayer Mode: Waiting for Bootstrap command...");
+            return; 
+        }
+
+        SpawnLocalPlayer();
+    }
+
+    public void SpawnPlayerAt(Vector3 position)
+    {
+        Debug.Log($"[PlayerSpawner] Spawn Command Received at {position}");
+        
+        if (spawnPoint == null)
+        {
+            GameObject sp = new GameObject("DynamicSpawnPoint");
+            spawnPoint = sp.transform;
+        }
+        
+        spawnPoint.position = position;
         SpawnLocalPlayer();
     }
 

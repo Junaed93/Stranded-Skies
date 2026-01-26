@@ -18,28 +18,22 @@ public class WorldGenerator : MonoBehaviour
 
     // Awake removed (Merged below to avoid duplicate error)
 
-    void Start()
+    // [NEW] Initialization Callback
+    private System.Action onWorldReadyCallback;
+
+    // Start removed to prevent auto-run.
+    // Bootstrap must call InitializeWorld.
+
+    public void InitializeWorld(int serverSeed, System.Action onReady)
     {
-        if (player == null)
-            player = GameObject.FindGameObjectWithTag("Player")?.transform;
-
-        // Auto-setup Composite Collider for smoother physics
-        if (groundTilemap != null)
-        {
-            // Ensure TilemapCollider2D exists
-            TilemapCollider2D tmCollider = groundTilemap.GetComponent<TilemapCollider2D>();
-            if (tmCollider == null) tmCollider = groundTilemap.gameObject.AddComponent<TilemapCollider2D>();
-
-            // Ensure CompositeCollider2D exists
-            CompositeCollider2D compCollider = groundTilemap.GetComponent<CompositeCollider2D>();
-            if (compCollider == null) compCollider = groundTilemap.gameObject.AddComponent<CompositeCollider2D>();
-
-            // Configure
-            groundTilemap.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
-            tmCollider.compositeOperation = Collider2D.CompositeOperation.Merge;
-        }
+        Debug.Log($"[WorldGenerator] Initializing with Seed: {serverSeed}");
+        seed = serverSeed;
+        onWorldReadyCallback = onReady;
 
         SetSeed(seed);
+        
+        // Notify Bootstrap
+        onWorldReadyCallback?.Invoke();
     }
 
     void Update() {

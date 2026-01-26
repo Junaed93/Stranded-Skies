@@ -62,8 +62,10 @@
     <Compile Include="Assets\script\GameSession.cs" />
     <Compile Include="Assets\script\WorldGenerator.cs" />
     <Compile Include="Assets\script\PlayerCombat.cs" />
+    <Compile Include="Assets\script\GameModeManager.cs" />
     <Compile Include="Assets\script\SocketClient.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
+    <Compile Include="Assets\script\CombatSystem.cs" />
     <Compile Include="Assets\script\RemotePlayerController.cs" />
     <Compile Include="Assets\script\BossSpawnManager.cs" />
     <Compile Include="Assets\script\PlatformAttach.cs" />
@@ -74,6 +76,7 @@
     <Compile Include="Assets\script\EnemyController.cs" />
     <Compile Include="Assets\script\SkullBoss.cs" />
     <Compile Include="Assets\script\GolemSpawner.cs" />
+    <Compile Include="Assets\script\FakeServer.cs" />
     <Compile Include="Assets\script\MultiplayerBootstrap.cs" />
     <Compile Include="Assets\script\BossHealthUI.cs" />
     <Compile Include="Assets\script\PlayerSpawner.cs" />

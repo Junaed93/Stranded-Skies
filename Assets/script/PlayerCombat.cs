@@ -157,38 +157,33 @@ public class PlayerCombat : MonoBehaviour, IDamageable
     // 🔥 ANIMATION EVENT (HIT FRAME) - Now also called by Invoke
     public void DealDamage()
     {
-        if (GameSession.Instance.mode == GameMode.SinglePlayer)
+        // Auto-Fix LayerMask: If it's 0 (Nothing) or 1 (Default), just hit EVERYTHING
+        int mask = enemyLayers;
+        if (mask <= 1) mask = ~0; 
+
+        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
+            attackPoint.position,
+            attackRange,
+            mask
+        );
+
+        foreach (Collider2D enemy in hitEnemies)
         {
-            // Auto-Fix LayerMask: If it's 0 (Nothing) or 1 (Default), just hit EVERYTHING
-            int mask = enemyLayers;
-            if (mask <= 1) mask = ~0; 
+             // Don't hit yourself
+             if (enemy.gameObject == gameObject) continue;
 
-            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
-                attackPoint.position,
-                attackRange,
-                mask
-            );
-
-            // Debug.Log($"[PlayerCombat] Swing! Hit {hitEnemies.Length} colliders.");
-            
-            // Prioritize IDamageable
-            foreach (Collider2D enemy in hitEnemies)
+             // Use Central Combat System
+             if (CombatSystem.Instance != null && GameModeManager.Instance.IsMultiplayer())
+             {
+                  CombatSystem.Instance.RequestDamage(enemy.gameObject, attackDamage);
+             }
+             // Fallback / Singleplayer
+             else if (enemy.TryGetComponent(out IDamageable damageable))
             {
-                 // Don't hit yourself
-                 if (enemy.gameObject == gameObject) continue;
-
-                if (enemy.TryGetComponent(out IDamageable damageable))
-                {
-                    damageable.TakeDamage(attackDamage);
-                    PlaySound(swordHitSFX);
-                    Debug.Log($"[PlayerCombat] HIT {enemy.name} for {attackDamage} damage.");
-                }
+                damageable.TakeDamage(attackDamage);
+                PlaySound(swordHitSFX);
+                Debug.Log($"[PlayerCombat] HIT {enemy.name} for {attackDamage} damage.");
             }
-        }
-        else
-        {
-            // Multiplayer: Only send intent, do not apply damage locally
-            // PlayerNetworkSender.SendAttack();
         }
     }
 

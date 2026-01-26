@@ -66,11 +66,22 @@ public class BossSpawnManager : MonoBehaviour
         if (groundLayer == 0)
             groundLayer = LayerMask.GetMask("Ground");
 
-        // Subscribe to kill tracker
-        if (EnemyKillTracker.Instance != null)
+        // [Multiplayer] Listen to Server
+        if (FakeServer.Instance != null && GameModeManager.Instance.IsMultiplayer())
         {
-            EnemyKillTracker.Instance.OnEnemyKilled += OnKillCountChanged;
+             FakeServer.Instance.OnBossSpawnCommand += SpawnBossFromCommand;
+             Debug.Log("[BossSpawnManager] Listening to Server Boss Commands");
         }
+        else if (EnemyKillTracker.Instance != null)
+        {
+             // Single Player Fallback
+             EnemyKillTracker.Instance.OnEnemyKilled += OnKillCountChanged;
+        }
+    }
+
+    void SpawnBossFromCommand()
+    {
+         SpawnBoss();
     }
 
     void OnDestroy()
@@ -79,10 +90,15 @@ public class BossSpawnManager : MonoBehaviour
         {
             EnemyKillTracker.Instance.OnEnemyKilled -= OnKillCountChanged;
         }
+        
+        if (FakeServer.Instance != null)
+        {
+             FakeServer.Instance.OnBossSpawnCommand -= SpawnBossFromCommand;
+        }
     }
 
     /// <summary>
-    /// Called when the kill count changes.
+    /// Called when the kill count changes (Single Player Only).
     /// </summary>
     /// <param name="totalKills">The new total kill count</param>
     void OnKillCountChanged(int totalKills)
@@ -95,6 +111,13 @@ public class BossSpawnManager : MonoBehaviour
             SpawnBoss();
             lastBossSpawnKillCount = totalKills;
         }
+    }
+    
+    // Allow external calls
+    public void SpawnBoss(Transform playerTransform)
+    {
+        target = playerTransform;
+        SpawnBoss();
     }
 
     /// <summary>

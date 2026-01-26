@@ -138,21 +138,22 @@ public class EnemyAI : MonoBehaviour
 
         float dist = Vector2.Distance(transform.position, player.position);
         
-        // Relaxed Hit Check: Just check distance. Direction check was failing.
+        // Relaxed Hit Check
         if (dist <= attackRange)
         {
-            if (GameSession.Instance.mode == GameMode.SinglePlayer)
+            // Use Central Combat System (works for both Single & Multi)
+            if (CombatSystem.Instance != null)
             {
-                if (player.TryGetComponent(out PlayerCombat pc))
-                {
-                    pc.TakeDamage(attackDamage);
-                    Debug.Log($"[EnemyAI] HIT Player for {attackDamage} damage!");
-                }
+                CombatSystem.Instance.RequestDamage(player.gameObject, attackDamage);
+                Debug.Log($"[EnemyAI] Requested attack on Player ({attackDamage} dmg)");
             }
             else
             {
-                // Multiplayer: Request damage from server instead of applying directly
-                // PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
+                // Fallback for independent testing
+                 if (player.TryGetComponent(out IDamageable damageable))
+                {
+                    damageable.TakeDamage(attackDamage);
+                }
             }
         }
     }
