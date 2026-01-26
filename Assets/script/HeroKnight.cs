@@ -116,17 +116,8 @@ public class HeroKnightController : MonoBehaviour
             Invoke(nameof(StopRoll), 0.4f);
         }
 
-        // HURT
-        if (Input.GetKeyDown(KeyCode.Q))
-            anim.SetTrigger("Hurt");
-
-        // DEATH
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            anim.SetBool("IsDead", true);
-            anim.SetTrigger("Death");
-            enabled = false;
-        }
+        // HURT - Handled by PlayerCombat.cs
+        // DEATH - Handled by PlayerCombat.cs
     }
 
     void StopRoll()

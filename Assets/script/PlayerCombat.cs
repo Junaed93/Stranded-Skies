@@ -32,6 +32,8 @@ public class PlayerCombat : MonoBehaviour, IDamageable
     public AudioClip swordSwingSFX;
     public AudioClip swordHitSFX;
     public AudioClip blockSFX;
+    public AudioClip hurtSFX;
+    public AudioClip deathSFX;
 
     [Header("Components")]
     public Animator animator;
@@ -240,6 +242,7 @@ public class PlayerCombat : MonoBehaviour, IDamageable
     {
         currentHealth -= damage;
         animator.SetTrigger("Hurt");
+        PlaySound(hurtSFX);
         lastDamageTime = Time.time; // [NEW] Reset regen timer
 
         // [NEW] UI Update
@@ -259,6 +262,7 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
         animator.SetBool("IsDead", true); // [NEW] Keep in death state
         animator.SetTrigger("Death");
+        PlaySound(deathSFX);
 
         // Disable controls
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();

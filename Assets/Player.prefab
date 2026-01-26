@@ -291,6 +291,8 @@ MonoBehaviour:
   swordSwingSFX: {fileID: 8300000, guid: 8cb62a31346de6a41968552314d42a7d, type: 3}
   swordHitSFX: {fileID: 8300000, guid: 86ffb9ce8f7bede42b9a5b454ea81984, type: 3}
   blockSFX: {fileID: 8300000, guid: 031a9e8e26eb939488b832ed7f4d43f2, type: 3}
+  hurtSFX: {fileID: 8300000, guid: fb8e20d3cb80830438d28fb815133022, type: 3}
+  deathSFX: {fileID: 8300000, guid: 782fcc95f49ea9643b2a70d0183513a9, type: 3}
   animator: {fileID: 7659583610481527838}
 --- !u!114 &6757431653244094675
 MonoBehaviour:
