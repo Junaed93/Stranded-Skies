@@ -53,7 +53,15 @@ public class EnemyAI : MonoBehaviour
     void Update()
     {
         if (enemyHealth == null || enemyHealth.currentHealth <= 0) return;
-        if (player == null) return;
+        
+        // Continuously search for player if not found
+        if (player == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p) player = p.transform;
+            return;
+        }
+
 
         float distance = Vector2.Distance(transform.position, player.position);
 
@@ -128,8 +136,16 @@ public class EnemyAI : MonoBehaviour
 
         if (dist <= attackRange && dirToPlayer == enemyDir)
         {
-            if (player.TryGetComponent(out PlayerCombat pc))
-                pc.TakeDamage(attackDamage);
+            if (GameSession.Instance.mode == GameMode.SinglePlayer)
+            {
+                if (player.TryGetComponent(out PlayerCombat pc))
+                    pc.TakeDamage(attackDamage);
+            }
+            else
+            {
+                // Multiplayer: Request damage from server instead of applying directly
+                PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
+            }
         }
     }
 

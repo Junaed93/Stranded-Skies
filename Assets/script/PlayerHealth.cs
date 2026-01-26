@@ -20,6 +20,20 @@ public class Health : MonoBehaviour
     {
         if (isDead) return;
 
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
+        {
+            ApplyDamage(damage);
+        }
+        else
+        {
+            // Multiplayer: Intent only, actual damage applied via external call (NetworkApplyDamage stub)
+            Debug.Log($"[Multiplayer] {gameObject.name} damage requested ({damage}) but not applied locally.");
+        }
+    }
+
+    // 🌐 Entry point for multiplayer damage confirmation or singleplayer application
+    public void ApplyDamage(int damage)
+    {
         currentHealth -= damage;
         Debug.Log(gameObject.name + " HP: " + currentHealth);
 

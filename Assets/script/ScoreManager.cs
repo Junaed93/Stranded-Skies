@@ -22,6 +22,21 @@ public class ScoreManager : MonoBehaviour
 
     public void AddScore(int amount)
     {
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
+        {
+            ApplyScore(amount);
+        }
+        else
+        {
+            // Multiplayer: Typically scores are confirmed by the server
+            Debug.Log($"[Multiplayer] Score addition requested ({amount}) but waiting for server confirmation.");
+            // ApplyScore(amount); // Uncomment if you want optimistic updates
+        }
+    }
+
+    // 🌐 Centralized score application
+    public void ApplyScore(int amount)
+    {
         score += amount;
         OnScoreChanged?.Invoke(score); // [NEW] Notify UI
         Debug.Log($"Score Added: {amount} | Total Score: {score}");

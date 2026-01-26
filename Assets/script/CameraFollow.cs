@@ -24,13 +24,30 @@ public class CameraFollow : MonoBehaviour
     {
         cam = GetComponent<Camera>();
         if (enemyLayer == 0) enemyLayer = LayerMask.GetMask("Enemy");
+        Debug.Log("[CameraFollow] Started - waiting for player");
     }
 
     void LateUpdate()
     {
-        if (target == null) return;
+        // Auto-find player if not assigned
+        if (target == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                target = player.transform;
+                Debug.Log("[CameraFollow] Found player: " + player.name);
+            }
+            else
+            {
+                // Only log occasionally to avoid spam
+                if (Time.frameCount % 60 == 0)
+                    Debug.Log("[CameraFollow] Still searching for Player tag...");
+            }
+            return;
+        }
 
-        // 1. Position
+        // Follow the target
         Vector3 desiredPosition = target.position + offset;
         
         if (enableLimits)
@@ -44,6 +61,7 @@ public class CameraFollow : MonoBehaviour
         // 2. Dynamic Zoom
         HandleZoom();
     }
+
 
     void HandleZoom()
     {

@@ -153,19 +153,27 @@ public class PlayerCombat : MonoBehaviour
     // 🔥 ANIMATION EVENT (HIT FRAME)
     public void DealDamage()
     {
-        Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
-            attackPoint.position,
-            attackRange,
-            enemyLayers
-        );
-
-        foreach (Collider2D enemy in hitEnemies)
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
         {
-            if (enemy.TryGetComponent(out IDamageable damageable))
+            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
+                attackPoint.position,
+                attackRange,
+                enemyLayers
+            );
+
+            foreach (Collider2D enemy in hitEnemies)
             {
-                damageable.TakeDamage(attackDamage);
-                PlaySound(swordHitSFX);
+                if (enemy.TryGetComponent(out IDamageable damageable))
+                {
+                    damageable.TakeDamage(attackDamage);
+                    PlaySound(swordHitSFX);
+                }
             }
+        }
+        else
+        {
+            // Multiplayer: Only send intent, do not apply damage locally
+            PlayerNetworkSender.SendAttack();
         }
     }
 
@@ -195,6 +203,20 @@ public class PlayerCombat : MonoBehaviour
             return; // ❌ no damage
         }
 
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
+        {
+            ApplyDamage(damage);
+        }
+        else
+        {
+            // Multiplayer: Intent only, actual damage applied via NetworkApplyDamage (stub)
+            Debug.Log("[Multiplayer] Player health change requested but not applied locally.");
+        }
+    }
+
+    // 🌐 Entry point for multiplayer damage confirmation or singleplayer application
+    public void ApplyDamage(int damage)
+    {
         currentHealth -= damage;
         animator.SetTrigger("Hurt");
         lastDamageTime = Time.time; // [NEW] Reset regen timer

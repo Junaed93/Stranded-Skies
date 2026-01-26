@@ -38,7 +38,15 @@ public class HeroKnightController : MonoBehaviour
 
         // MOVE
         if (!rolling)
-            rb.linearVelocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
+        {
+            Vector2 velocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
+            rb.linearVelocity = velocity;
+
+            if (GameSession.Instance.mode == GameMode.Multiplayer)
+            {
+                PlayerNetworkSender.SendMove(velocity);
+            }
+        }
 
         // FLIP
         if (x != 0)

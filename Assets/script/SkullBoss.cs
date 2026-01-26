@@ -44,6 +44,13 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
     void Start()
     {
+        // In Multiplayer: All bosses have 500 HP and no boss walls
+        if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
+        {
+            maxHealth = 500;
+            bossWall = null; // No boss walls in multiplayer
+        }
+
         currentHealth = maxHealth;
 
         if (!player)
@@ -62,7 +69,16 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
     void Update()
     {
-        if (isDead || player == null) return;
+        if (isDead) return;
+        
+        // Continuously search for player if not found
+        if (player == null)
+        {
+            GameObject p = GameObject.FindGameObjectWithTag("Player");
+            if (p) player = p.transform;
+            return;
+        }
+
 
         float distance = Vector2.Distance(transform.position, player.position);
 
@@ -143,10 +159,19 @@ public class SkullBoss : MonoBehaviour, IDamageable
         float dist = Vector2.Distance(transform.position, player.position);
         if (dist <= attackHitRange)
         {
-            PlayerCombat pc = player.GetComponent<PlayerCombat>();
-            if (pc != null)
+            if (GameSession.Instance.mode == GameMode.SinglePlayer)
             {
-                pc.TakeDamage(attackDamage);
+                PlayerCombat pc = player.GetComponent<PlayerCombat>();
+                if (pc != null)
+                {
+                    pc.TakeDamage(attackDamage);
+                    hasDealtDamage = true;
+                }
+            }
+            else
+            {
+                // Multiplayer: Request damage from server
+                PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
                 hasDealtDamage = true;
             }
         }
