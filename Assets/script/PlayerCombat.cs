@@ -285,7 +285,12 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         else
         {
             Debug.Log("Game Over - No respawns left.");
-            // Optional: SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+            GameOverPanel gameOver = FindObjectOfType<GameOverPanel>();
+            if (gameOver != null)
+            {
+                gameOver.Show();
+            }
         }
     }
 
