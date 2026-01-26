@@ -64,9 +64,18 @@ public class EnemySpawner : MonoBehaviour
     {
         nextSpawnTime = Time.time + spawnInterval;
         
-        // Initialize ground layer if not set
+        // AUTO-FIX: If groundLayer is 0 or just "Ground", add "Default" to it
+        // This failsafe ensures we hit the collider even if Layer isn't set perfectly
         if (groundLayer == 0)
-            groundLayer = LayerMask.GetMask("Ground");
+        {
+            groundLayer = LayerMask.GetMask("Ground", "Default");
+            Debug.Log("[EnemySpawner] Auto-set Ground Layer to: Ground + Default");
+        }
+        else if (groundLayer == LayerMask.GetMask("Ground"))
+        {
+             groundLayer |= LayerMask.GetMask("Default");
+             Debug.Log("[EnemySpawner] Extended Ground Layer to include Default");
+        }
             
         Debug.Log("[EnemySpawner] Started");
     }
@@ -95,11 +104,13 @@ public class EnemySpawner : MonoBehaviour
         activeEnemies.RemoveAll(e => e == null);
 
         // Spawn if conditions are met
+        /* DISABLED TIME-BASED SPAWNING - Now controlled by WorldGenerator only
         if (Time.time >= nextSpawnTime && activeEnemies.Count < maxEnemies)
         {
             SpawnEnemy();
             nextSpawnTime = Time.time + spawnInterval;
         }
+        */
     }
 
     /// <summary>
@@ -144,66 +155,77 @@ public class EnemySpawner : MonoBehaviour
     /// </summary>
     Vector3? FindValidSpawnPosition(float spawnX)
     {
-        // First, find what ground level the player is on
-        Vector2 playerRayStart = new Vector2(target.position.x, target.position.y + 1f);
-        RaycastHit2D playerGroundHit = Physics2D.Raycast(playerRayStart, Vector2.down, 5f, groundLayer);
+        // 1. Check if Player is on ground
+        Vector2 playerRayStart = new Vector2(target.position.x, target.position.y);
         
-        if (playerGroundHit.collider == null)
+        // Debug check: Try to hit ANYTHING below player
+        RaycastHit2D hitCheck = Physics2D.Raycast(playerRayStart, Vector2.down, 10f);
+        if (hitCheck.collider != null)
         {
-            Debug.LogWarning("[EnemySpawner] Player not on ground!");
-            return null;
+             // Debug.Log($"[EnemySpawner] Player is standing above: {hitCheck.collider.name} (Layer: {LayerMask.LayerToName(hitCheck.collider.gameObject.layer)})");
         }
+        else
+        {
+             Debug.LogWarning($"[EnemySpawner] Raycast from {playerRayStart} hit NOTHING! Check Z-positions or Colliders.");
+             return null;
+        }
+
+        // Use the hit point as the ground reference
+        float playerGroundY = hitCheck.point.y;
         
-        float playerGroundY = playerGroundHit.point.y;
-        
-        // Now raycast at spawn X position
+        // 2. Check Spawn Point
         Vector2 spawnRayStart = new Vector2(spawnX, raycastStartHeight);
         RaycastHit2D spawnHit = Physics2D.Raycast(spawnRayStart, Vector2.down, maxRaycastDistance, groundLayer);
         
+        // If strict ground check fails, try ALL layers
         if (spawnHit.collider == null)
         {
-            // No ground at spawn position
-            return null;
+            spawnHit = Physics2D.Raycast(spawnRayStart, Vector2.down, maxRaycastDistance);
         }
+
+        if (spawnHit.collider == null) return null; // Still nothing? Give up.
         
         float spawnGroundLevel = spawnHit.point.y;
         
-        // Check if spawn ground is at similar height to player ground (within tolerance)
-        // This prevents spawning across gaps onto different platform levels
-        float heightTolerance = 3f;
-        if (Mathf.Abs(spawnGroundLevel - playerGroundY) > heightTolerance)
-        {
-            // Ground is at a very different height - likely a different platform
-            return null;
-        }
-        
-        // Verify there's continuous ground between player and spawn point
-        // Check at intervals to detect gaps
-        float checkInterval = 2f;
-        float startX = Mathf.Min(target.position.x, spawnX);
-        float endX = Mathf.Max(target.position.x, spawnX);
-        
-        for (float checkX = startX; checkX <= endX; checkX += checkInterval)
-        {
-            Vector2 checkRayStart = new Vector2(checkX, playerGroundY + 2f);
-            RaycastHit2D checkHit = Physics2D.Raycast(checkRayStart, Vector2.down, 5f, groundLayer);
-            
-            if (checkHit.collider == null)
-            {
-                // Gap detected!
-                return null;
-            }
-        }
-        
-        // Valid spawn position found
+        // 3. Height Tolerance Check
+        if (Mathf.Abs(spawnGroundLevel - playerGroundY) > 3f) return null;
+
         return new Vector3(spawnX, spawnGroundLevel + 0.5f, 0);
     }
 
 
     /// <summary>
+    /// Tries to spawn an enemy on a newly generated platform.
+    /// Called directly by WorldGenerator.
+    /// </summary>
+    public void TrySpawnEnemy(Vector3 position, int platformWidth)
+    {
+        if (enemyPrefabs.Length == 0) return;
+        if (activeEnemies.Count >= maxEnemies) return;
+
+        // FORCE SPAWN (Removed 50% chance for debugging)
+        // if (Random.value > 0.5f) return;
+
+        int enemyIndex = Random.Range(0, enemyPrefabs.Length);
+        GameObject prefab = enemyPrefabs[enemyIndex];
+
+        GameObject enemy = Instantiate(prefab, position, Quaternion.identity, enemiesParent);
+        enemy.name = $"Enemy_Gen_{activeEnemies.Count}";
+        activeEnemies.Add(enemy);
+        
+        // [FIX] Inject dependency immediately - No tag searching race conditions
+        EnemyAI ai = enemy.GetComponent<EnemyAI>();
+        if (ai != null)
+        {
+             ai.player = target; 
+        }
+
+        Debug.Log($"[EnemySpawner] Generated enemy at {position}");
+    }
+
+    /// <summary>
     /// Called when an enemy is killed. Updates tracking.
     /// </summary>
-    /// <param name="enemy">The enemy that was killed</param>
     public void OnEnemyKilled(GameObject enemy)
     {
         activeEnemies.Remove(enemy);

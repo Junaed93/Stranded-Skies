@@ -107,11 +107,14 @@ public class SkullBoss : MonoBehaviour, IDamageable
         }
 
         // ❌ Player must be in front to move/attack
+        // DISABLED CHECK: Assume boss can turn instantly or attack anyway
+        /*
         if (!IsPlayerInFront())
         {
             StopMoving();
             return;
         }
+        */
 
         // ✅ Attack
         if (distance <= attackRange && Time.time >= lastAttackTime + attackCooldown)
@@ -135,6 +138,7 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
     void StartAttack()
     {
+        Debug.Log($"[SkullBoss] Attacking Player! (Time: {Time.time})");
         isAttacking = true;
         hasDealtDamage = false;
         lastAttackTime = Time.time;
@@ -224,8 +228,19 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
     // ---------------- EDGE DETECTION ----------------
 
+    // ---------------- EDGE DETECTION ----------------
+    
     bool IsGroundAhead()
     {
+        // Platformer Logic: Even if there is a gap, try to move if Player is close?
+        // Actually, land bosses should trigger 'Jump' or stop.
+        // For now, let's just Fix the Layer Mask issue first.
+        
+        // AUTO-FIX: If groundLayer needs Default
+        int layerMask = groundLayer;
+        if (layerMask == LayerMask.GetMask("Ground"))
+             layerMask |= LayerMask.GetMask("Default");
+
         float dir = Mathf.Sign(transform.localScale.x);
 
         Vector2 start = new Vector2(
@@ -233,12 +248,13 @@ public class SkullBoss : MonoBehaviour, IDamageable
             transform.position.y
         );
 
-        RaycastHit2D hit = Physics2D.Raycast(
-            start,
-            Vector2.down,
-            groundCheckDistance,
-            groundLayer
-        );
+        RaycastHit2D hit = Physics2D.Raycast(start, Vector2.down, groundCheckDistance, layerMask);
+        
+        // If NO ground, but player is within attack range, maybe attack anyway?
+        if (hit.collider == null)
+        {
+             // Debug.Log("[SkullBoss] Edge detected! Stopping.");
+        }
 
         Debug.DrawRay(start, Vector2.down * groundCheckDistance, hit ? Color.green : Color.red);
         return hit.collider != null;

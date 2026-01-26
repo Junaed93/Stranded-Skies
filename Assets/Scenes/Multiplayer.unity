@@ -1516,14 +1516,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd62bfd3960a16240a7c875e875b912b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldGenerator
-  generateRadius: 60
-  updateInterval: 0.5
-  groundTile: {fileID: 0}
-  groundLevel: -1
-  groundDepth: 3
-  autoDetectGroundY: 1
   groundTilemap: {fileID: 1694650648}
-  target: {fileID: 0}
+  groundTiles:
+  - {fileID: 11400000, guid: 532313e6c2e8a22469b956f384ef352e, type: 2}
+  player: {fileID: 6629681673114807440, guid: 3e90e2d5a36406a42b634357315432db, type: 3}
+  seed: 12345
 --- !u!1 &1604416419
 GameObject:
   m_ObjectHideFlags: 0
@@ -1623,7 +1620,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1613450111}
-  - component: {fileID: 1613450112}
+  - component: {fileID: 1613450113}
   m_Layer: 7
   m_Name: EnemySpawner
   m_TagString: Enemy
@@ -1640,13 +1637,13 @@ Transform:
   m_GameObject: {fileID: 1613450109}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 313.55997, y: 287.0014, z: 0}
+  m_LocalPosition: {x: 20.43, y: 0.09, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1613450112
+--- !u!114 &1613450113
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1655,10 +1652,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 1613450109}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5444c5c28d7635447a8d4be05449811e, type: 3}
+  m_Script: {fileID: 11500000, guid: a6c4165bd6d644b4bbc980c4ee3b42d9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyKillTracker
-  totalKills: 0
+  m_EditorClassIdentifier: '::'
+  enemyPrefabs:
+  - {fileID: 4386701601823488166, guid: a53673783bfe20b4293b34a8daac2be8, type: 3}
+  minSpawnDistance: 5
+  maxSpawnDistance: 12
+  spawnInterval: 5
+  maxEnemies: 10
+  spawnGroundY: -1
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  raycastStartHeight: 20
+  maxRaycastDistance: 50
+  target: {fileID: 6629681673114807440, guid: 3e90e2d5a36406a42b634357315432db, type: 3}
+  enemiesParent: {fileID: 2004755740}
 --- !u!1 &1646852020
 GameObject:
   m_ObjectHideFlags: 0
@@ -2183,9 +2193,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2001467600}
   - component: {fileID: 2001467599}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: BossSpawner
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2215,7 +2225,7 @@ MonoBehaviour:
     m_Bits: 0
   raycastStartHeight: 20
   maxRaycastDistance: 50
-  target: {fileID: 0}
+  target: {fileID: 6629681673114807440, guid: 3e90e2d5a36406a42b634357315432db, type: 3}
   bossesParent: {fileID: 757553665}
 --- !u!4 &2001467600
 Transform:
@@ -2226,7 +2236,7 @@ Transform:
   m_GameObject: {fileID: 2001467598}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 313.55997, y: 287.0014, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

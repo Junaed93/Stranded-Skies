@@ -1,186 +1,178 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using System.Collections.Generic;
 
-/// <summary>
-/// WorldGenerator.cs
-/// Scan-and-fill infinite world generation.
-/// Fills exact gaps in the world to ensure continuous ground.
-/// Used ONLY in Multiplayer.scene.
-/// </summary>
 public class WorldGenerator : MonoBehaviour
 {
     public static WorldGenerator Instance { get; private set; }
 
-    [Header("Generation Settings")]
-    [Tooltip("Radius around player to ensure ground exists")]
-    public int generateRadius = 60;
-
-    [Tooltip("How often to run the generator (seconds)")]
-    public float updateInterval = 0.5f;
-
-    [Header("Ground Settings")]
-    [Tooltip("The ground tile to paint")]
-    public TileBase groundTile;
-
-    [Tooltip("Ground Y position (in tiles)")]
-    public int groundLevel = -1;
-
-    [Tooltip("How many tiles deep the ground should be")]
-    public int groundDepth = 3;
-
-    [Tooltip("If true, detects existing ground height on Start")]
-    public bool autoDetectGroundY = true;
-
     [Header("References")]
-    [Tooltip("The Tilemap to paint ground tiles on")]
     public Tilemap groundTilemap;
+    public TileBase[] groundTiles;
+    public Transform player; 
 
-    [Tooltip("Transform to track (usually the player)")]
-    public Transform target;
+    [Header("Settings")]
+    public int seed = 12345;
+    
+    private int lastX = 0;
+    private int lastY = -2;
 
-    private float nextUpdateTime;
-
-    void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
+    // Awake removed (Merged below to avoid duplicate error)
 
     void Start()
     {
-        // Safety Checks
-        if (groundTile == null) Debug.LogError("[WorldGenerator] CRITICAL: Ground Tile is missing! Assign it in Inspector.");
-        if (groundTilemap == null) Debug.LogError("[WorldGenerator] CRITICAL: Ground Tilemap is missing! Assign it in Inspector.");
+        if (player == null)
+            player = GameObject.FindGameObjectWithTag("Player")?.transform;
 
-        // Auto-detect ground level from existing tiles
-        // Scans a range around X=0 to avoid missing the ground if X=0 is empty
-        if (autoDetectGroundY && groundTilemap != null)
+        // Auto-setup Composite Collider for smoother physics
+        if (groundTilemap != null)
         {
-            groundTilemap.CompressBounds();
-            BoundsInt bounds = groundTilemap.cellBounds;
-            
-            bool found = false;
-            
-            // Scan X range from -20 to 20 to find ground
-            int scanRange = 20;
-            for (int x = -scanRange; x <= scanRange; x++)
-            {
-                // Scan from top down to find top-most ground tile
-                int startY = Mathf.Min(10, bounds.yMax); 
-                int endY = Mathf.Max(-20, bounds.yMin);
+            // Ensure TilemapCollider2D exists
+            TilemapCollider2D tmCollider = groundTilemap.GetComponent<TilemapCollider2D>();
+            if (tmCollider == null) tmCollider = groundTilemap.gameObject.AddComponent<TilemapCollider2D>();
 
-                for (int y = startY; y >= endY; y--)
-                {
-                    if (groundTilemap.HasTile(new Vector3Int(x, y, 0)))
-                    {
-                        groundLevel = y;
-                        found = true;
-                        Debug.Log($"[WorldGenerator] Auto-detected ground level at Y={groundLevel} (found at x={x})");
-                        goto GroundFound;
-                    }
-                }
-            }
-            
-            GroundFound:
-            if (!found)
-            {
-                Debug.LogWarning($"[WorldGenerator] Could not auto-detect ground in range x=-{scanRange} to {scanRange}.");
-                
-                // Fallback: Use player position if available
-                if (target != null)
-                {
-                    // Assuming player pivot is at feet/center, ground is usually 1 unit below
-                    groundLevel = Mathf.FloorToInt(target.position.y - 1.5f); 
-                    Debug.Log($"[WorldGenerator] FORCING ground level to Player Y ({target.position.y}) - 1.5 => Y={groundLevel}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[WorldGenerator] Using default groundLevel: Y={groundLevel}");
-                }
-            }
-        }
-        else if (groundTilemap != null && target != null && !autoDetectGroundY)
-        {
-             // If auto-detect is OFF, still try to align with player just in case default is wrong
-             // Uncomment if you want this behavior:
-             // groundLevel = Mathf.FloorToInt(target.position.y - 1f);
+            // Ensure CompositeCollider2D exists
+            CompositeCollider2D compCollider = groundTilemap.GetComponent<CompositeCollider2D>();
+            if (compCollider == null) compCollider = groundTilemap.gameObject.AddComponent<CompositeCollider2D>();
+
+            // Configure
+            groundTilemap.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Static;
+            tmCollider.compositeOperation = Collider2D.CompositeOperation.Merge;
         }
 
-        // Initial generation around origin
-        ScanAndFill(0f);
+        SetSeed(seed);
     }
 
-    void Update()
-    {
-        // Try to find player if not assigned
-        if (target == null)
+    void Update() {
+        if (player == null)
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                target = player.transform;
-            }
+             GameObject p = GameObject.FindGameObjectWithTag("Player");
+             if (p != null) player = p.transform;
+             return;
         }
 
-        // Generate periodically around player
-        if (target != null && Time.time >= nextUpdateTime)
+        // AGGRESSIVE GENERATION
+        // If player is within 60 units of the edge, BUILD MORE.
+        // Don't wait.
+        if (player.position.x > lastX - 60) 
         {
-            ScanAndFill(target.position.x);
-            nextUpdateTime = Time.time + updateInterval;
+            GenerateNextSection();
+        }
+    }
+
+    public void SetSeed(int newSeed) {
+        seed = newSeed;
+        if (groundTilemap != null) groundTilemap.ClearAllTiles();
+        
+        lastX = 0; 
+        
+        // Sync starting height with player position if possible
+        if (player != null)
+        {
+            // Use -1.5 to be safe under feet
+            lastY = Mathf.FloorToInt(player.position.y - 1.5f);
+            Debug.Log($"[WorldGenerator] Synced generation height to Player Y: {lastY}");
+        }
+        else
+        {
+            lastY = -2;
+        }
+
+        Random.InitState(seed);
+        
+        // Ensure we have tiles
+        if (groundTiles == null || groundTiles.Length == 0)
+        {
+            Debug.LogError("No ground tiles assigned in WorldGenerator!");
+            return;
+        }
+
+        // Generate SAFE Start Zone: Start 15 units BEHIND player, go 40 units total
+        // Note: If player is at 0, startX is -15. Center is roughly +5.
+        // We force alignment to ensure no gap falls.
+        int startX = Mathf.FloorToInt(player != null ? player.position.x : 0) - 15;
+        int safeWidth = 40;
+        
+        SpawnPlatform(startX, lastY, safeWidth); 
+        lastX = startX + safeWidth;
+
+        // CRITICAL FIX: Teleport player to valid ground immediately
+        if (player != null)
+        {
+            float safeX = startX + (safeWidth / 2f);
+            float safeY = lastY + 2f; // +2 to be safely above
+            player.position = new Vector3(safeX, safeY, 0);
+            
+            // Kill any initial velocity
+            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            
+            Debug.Log($"[WorldGenerator] FORCE-TELEPORTED Player to Safe Start: {player.position}");
+        }
+    }
+
+    void GenerateNextSection() {
+        // Deterministic generation based on seed and position
+        Random.InitState(seed + lastX); 
+        int gap = Random.Range(2, 4); // Smaller gaps (was 2,5)
+        int width = 5; 
+        int y = Mathf.Clamp(lastY + Random.Range(-2, 3), -5, 2); 
+
+        SpawnPlatform(lastX + gap, y, width);
+        Debug.Log($"[WorldGenerator] Generated platform at X:{lastX + gap} Y:{y}");
+        
+        // Call Enemy Spawner during world gen
+        float platformCenterX = (lastX + gap) + (width / 2f);
+        Vector3 spawnPos = new Vector3(platformCenterX, y + 1, 0); 
+        
+        EnemySpawner.Instance?.TrySpawnEnemy(spawnPos, width);
+        
+        lastX += gap + width;
+        lastY = y;
+    }
+
+    void SpawnPlatform(int startX, int y, int width) {
+        if (groundTiles.Length == 0) return;
+
+        for (int i = 0; i < width; i++)
+        {
+            groundTilemap.SetTile(new Vector3Int(startX + i, y, 0), groundTiles[0]);
         }
     }
 
     /// <summary>
-    /// Scans the area around center X and fills any empty ground tiles.
+    /// Returns a guaranteed safe spawn point on the first platform.
+    /// Used by PlayerSpawner to prevent spawning in gaps/void.
     /// </summary>
-    void ScanAndFill(float centerX)
+    public Vector3 GetSafeSpawnPosition()
     {
-        if (groundTile == null || groundTilemap == null) return;
+        // Increased safety height to prevent clipping
+        return new Vector3(lastX - 20, lastY + 5f, 0);
+    }
 
-        int startX = Mathf.FloorToInt(centerX) - generateRadius;
-        int endX = Mathf.FloorToInt(centerX) + generateRadius;
-
-        for (int x = startX; x <= endX; x++)
+    void Awake()
+    {
+        if (Instance != null && Instance != this) Destroy(gameObject);
+        else Instance = this;
+        
+        // Randomize Seed on Awake (Unified Logic)
+        if (seed == 0 || seed == 12345) 
         {
-            // Check surface tile
-            Vector3Int surfacePos = new Vector3Int(x, groundLevel, 0);
-
-            // If TOP tile is missing, we need to fill this column
-            // But we must NOT overwrite existing manual tiles
-            // Simple check: Is the spot empty?
-            if (!groundTilemap.HasTile(surfacePos))
-            {
-                FillColumn(x);
-            }
+            seed = (int)System.DateTime.Now.Ticks;
+            Debug.Log($"[WorldGenerator] Randomized Seed: {seed}");
         }
     }
 
-    void FillColumn(int x)
+    void OnGUI()
     {
-        for (int y = 0; y < groundDepth; y++)
-        {
-            int tileY = groundLevel - y;
-            Vector3Int pos = new Vector3Int(x, tileY, 0);
-
-            // Double check we aren't overwriting anything
-            if (!groundTilemap.HasTile(pos))
-            {
-                groundTilemap.SetTile(pos, groundTile);
-            }
-        }
-    }
-
-    public void ResetWorld()
-    {
-        if (groundTilemap != null)
-        {
-            groundTilemap.ClearAllTiles();
-        }
-        ScanAndFill(0f);
+        if (player == null) return;
+        
+        GUIStyle style = new GUIStyle();
+        style.fontSize = 24;
+        style.normal.textColor = Color.yellow;
+        
+        float threshold = lastX - 45;
+        string status = player.position.x > threshold ? "GENERATING NOW" : "Waiting for move";
+        
+        GUI.Label(new Rect(10, 10, 500, 100), $"Player X: {player.position.x:F1}\nThreshold: {threshold} (LastX: {lastX})\nStatus: {status}", style);
     }
 }

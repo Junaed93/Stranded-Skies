@@ -5,7 +5,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Movement Stats")]
     public float speed = 3f;
     public float stopDistance = 1.5f;
-    public float chaseRange = 10f;
+    public float chaseRange = 50f; // Was 10f - Made aggressive
 
     [Header("Attack Stats")]
     public float attackRange = 2.5f;
@@ -14,7 +14,7 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Edge Detection")]
     public bool enableEdgeDetection = true;
-    public float groundCheckDistance = 1.5f;
+    public float groundCheckDistance = 10f; // Was 1.5f - Safer detection
     public float edgeCheckOffset = 0.5f;
     public LayerMask groundLayer;
 
@@ -54,11 +54,15 @@ public class EnemyAI : MonoBehaviour
     {
         if (enemyHealth == null || enemyHealth.currentHealth <= 0) return;
         
-        // Continuously search for player if not found
+        // Continuously search for player if not found or lost (handled by Spawner usually, but backup needed)
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
-            if (p) player = p.transform;
+            if (p) 
+            {
+                player = p.transform;
+                 // Debug.Log($"[EnemyAI] Found player: {p.name}");
+            }
             return;
         }
 
@@ -122,24 +126,28 @@ public class EnemyAI : MonoBehaviour
         isAttacking = true;
         nextAttackTime = Time.time + 1f / attackRate;
 
+        // [FIX] Auto-trigger damage in case Animation Event is missing
+        Invoke(nameof(DealDamage), 0.5f);
         Invoke(nameof(ForceEndAttack), 1.2f);
     }
 
-    // 🔥 Animation Event (HIT FRAME)
+    // 🔥 Animation Event (HIT FRAME) - Now also called by Invoke
     public void DealDamage()
     {
         if (!player) return;
 
         float dist = Vector2.Distance(transform.position, player.position);
-        float dirToPlayer = Mathf.Sign(player.position.x - transform.position.x);
-        float enemyDir = facingRight ? 1f : -1f;
-
-        if (dist <= attackRange && dirToPlayer == enemyDir)
+        
+        // Relaxed Hit Check: Just check distance. Direction check was failing.
+        if (dist <= attackRange)
         {
             if (GameSession.Instance.mode == GameMode.SinglePlayer)
             {
                 if (player.TryGetComponent(out PlayerCombat pc))
+                {
                     pc.TakeDamage(attackDamage);
+                    Debug.Log($"[EnemyAI] HIT Player for {attackDamage} damage!");
+                }
             }
             else
             {
@@ -174,6 +182,11 @@ public class EnemyAI : MonoBehaviour
 
     bool IsGroundAhead()
     {
+        // AUTO-FIX: If groundLayer needs Default (fixes movement on untagged platforms)
+        int layerMask = groundLayer;
+        if (layerMask == LayerMask.GetMask("Ground"))
+             layerMask |= LayerMask.GetMask("Default");
+
         float dir = facingRight ? 1f : -1f;
         Vector2 start = new Vector2(
             transform.position.x + edgeCheckOffset * dir,
@@ -184,7 +197,7 @@ public class EnemyAI : MonoBehaviour
             start,
             Vector2.down,
             groundCheckDistance,
-            groundLayer
+            layerMask
         );
 
         Debug.DrawRay(start, Vector2.down * groundCheckDistance,
@@ -197,5 +210,41 @@ public class EnemyAI : MonoBehaviour
     {
         if (clip && audioSource)
             audioSource.PlayOneShot(clip);
+    }
+
+    void OnDrawGizmos()
+    {
+        // 1. Attack Range (Red)
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
+
+        // 2. Chase Range (Cyan)
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, chaseRange);
+        
+        // 3. Connection Line to Player
+        if (player != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(transform.position, player.position);
+        }
+    }
+
+    void OnGUI()
+    {
+        // Simple debug over the enemy head (world to screen)
+        if (Camera.main == null) return;
+        
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position + Vector3.up * 2);
+        if (screenPos.z < 0) return;
+
+        string status = $"HP: {enemyHealth.currentHealth}\nState: {(isAttacking ? "ATTACKING" : "Chasing")}\nDist: {(player ? Vector2.Distance(transform.position, player.position).ToString("F1") : "No Target")}";
+        
+        GUIStyle style = new GUIStyle();
+        style.normal.textColor = Color.red;
+        style.fontSize = 20;
+        
+        // Flip Y for GUI
+        GUI.Label(new Rect(screenPos.x - 50, Screen.height - screenPos.y - 50, 200, 100), status, style);
     }
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlayerCombat : MonoBehaviour
+public class PlayerCombat : MonoBehaviour, IDamageable
 {
     [Header("Player Stats")]
     public int maxHealth = 100;
@@ -148,25 +148,40 @@ public class PlayerCombat : MonoBehaviour
         isAttacking = true;
 
         PlaySound(swordSwingSFX);
+        
+        // [FIX] Auto-trigger detection in case Animation Event is missing
+        Invoke(nameof(DealDamage), 0.3f); 
+        Invoke(nameof(EndAttack), 0.8f);
     }
 
-    // 🔥 ANIMATION EVENT (HIT FRAME)
+    // 🔥 ANIMATION EVENT (HIT FRAME) - Now also called by Invoke
     public void DealDamage()
     {
         if (GameSession.Instance.mode == GameMode.SinglePlayer)
         {
+            // Auto-Fix LayerMask: If it's 0 (Nothing) or 1 (Default), just hit EVERYTHING
+            int mask = enemyLayers;
+            if (mask <= 1) mask = ~0; 
+
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
                 attackPoint.position,
                 attackRange,
-                enemyLayers
+                mask
             );
 
+            // Debug.Log($"[PlayerCombat] Swing! Hit {hitEnemies.Length} colliders.");
+            
+            // Prioritize IDamageable
             foreach (Collider2D enemy in hitEnemies)
             {
+                 // Don't hit yourself
+                 if (enemy.gameObject == gameObject) continue;
+
                 if (enemy.TryGetComponent(out IDamageable damageable))
                 {
                     damageable.TakeDamage(attackDamage);
                     PlaySound(swordHitSFX);
+                    Debug.Log($"[PlayerCombat] HIT {enemy.name} for {attackDamage} damage.");
                 }
             }
         }

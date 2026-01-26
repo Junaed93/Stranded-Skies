@@ -15,7 +15,7 @@ public class BossSpawnManager : MonoBehaviour
     public GameObject[] bossPrefabs;
 
     [Tooltip("Number of kills required to spawn a boss")]
-    public int killsToSpawnBoss = 20;
+    public int killsToSpawnBoss = 1;
 
     [Tooltip("Distance ahead of player to spawn boss")]
     public float bossSpawnDistance = 15f;
@@ -143,11 +143,15 @@ public class BossSpawnManager : MonoBehaviour
     {
         // Find what ground level the player is on
         Vector2 playerRayStart = new Vector2(target.position.x, target.position.y + 1f);
-        RaycastHit2D playerGroundHit = Physics2D.Raycast(playerRayStart, Vector2.down, 5f, groundLayer);
+        RaycastHit2D playerGroundHit = Physics2D.Raycast(playerRayStart, Vector2.down, 10f, groundLayer);
         
+        // Fallback to Default layer if Ground layer fails
+        if (playerGroundHit.collider == null)
+            playerGroundHit = Physics2D.Raycast(playerRayStart, Vector2.down, 10f);
+
         if (playerGroundHit.collider == null)
         {
-            Debug.LogWarning("[BossSpawnManager] Player not on ground!");
+            Debug.LogWarning($"[BossSpawnManager] Player not on ground at {playerRayStart}! Boss cannot spawn.");
             return null;
         }
         
@@ -176,7 +180,8 @@ public class BossSpawnManager : MonoBehaviour
                 if (Mathf.Abs(spawnGroundLevel - playerGroundY) > heightTolerance) continue;
                 
                 // Verify continuous ground between player and spawn point
-                if (!IsGroundContinuous(target.position.x, spawnX, playerGroundY)) continue;
+                // SKIP strict continuity check for platformer mode (gaps are expected)
+                // if (!IsGroundContinuous(target.position.x, spawnX, playerGroundY)) continue;
                 
                 // Valid position found
                 return new Vector3(spawnX, spawnGroundLevel + 0.5f, 0);

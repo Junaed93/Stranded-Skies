@@ -61,6 +61,75 @@ public class PlayerSpawner : MonoBehaviour
         {
             Debug.LogWarning("[PlayerSpawner] Could not find CameraFollow on Main Camera!");
         }
+        
+        // FREEZE PHYSICS immediately to prevent falling into void while world loads
+        Rigidbody2D rb = localPlayerInstance.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+             rb.simulated = false; // Stop everything
+        }
+        
+        // Start searching for ground
+        Invoke(nameof(SnapToGround), 0.1f);
+    }
+
+    void SnapToGround()
+    {
+        if (localPlayerInstance == null) return;
+        
+        // METHOD 1: Ask WorldGenerator for the Absolute Truth
+        if (WorldGenerator.Instance != null)
+        {
+             Vector3 safeSpawn = WorldGenerator.Instance.GetSafeSpawnPosition();
+             localPlayerInstance.transform.position = safeSpawn;
+             
+             // Unfreeze and finish
+             UnfreezePlayer();
+             Debug.Log($"[PlayerSpawner] Teleported to WorldGenerator Safe Spot: {safeSpawn}");
+             return;
+        }
+
+        // METHOD 2: Raycast Fallback (if no generator)
+        RaycastHit2D hitDown = Physics2D.Raycast(localPlayerInstance.transform.position, Vector2.down, Mathf.Infinity);
+        RaycastHit2D hitUp = Physics2D.Raycast(localPlayerInstance.transform.position, Vector2.up, Mathf.Infinity);
+        
+        Vector3 targetPos = localPlayerInstance.transform.position;
+        bool found = false;
+
+        if (hitUp.collider != null) 
+        {
+            targetPos = hitUp.point + new Vector2(0, 1.5f);
+            found = true;
+        }
+        else if (hitDown.collider != null)
+        {
+            targetPos = hitDown.point + new Vector2(0, 1.5f);
+            found = true;
+        }
+        else
+        {
+            Debug.LogWarning($"[PlayerSpawner] SnapToGround FAILED (Attempt). Raycast hit NOTHING. Retrying...");
+            Invoke(nameof(SnapToGround), 0.2f);
+            return;
+        }
+
+        if (found)
+        {
+             localPlayerInstance.transform.position = targetPos;
+             UnfreezePlayer();
+             Debug.Log($"[PlayerSpawner] Player SNAPPED and UNFROZEN at {targetPos}");
+        }
+    }
+
+    void UnfreezePlayer()
+    {
+         if (localPlayerInstance == null) return;
+         Rigidbody2D rb = localPlayerInstance.GetComponent<Rigidbody2D>();
+         if (rb != null) 
+         {
+             rb.linearVelocity = Vector2.zero;
+             rb.simulated = true; 
+         }
     }
 
 
