@@ -35,16 +35,33 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
         if (isDead) return;
 
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
+        {
+            ApplyDamage(damage);
+        }
+        else
+        {
+            // Multiplayer: Wait for server
+            // [DEMO FALLBACK] Apply locally
+            ApplyDamage(damage);
+            Debug.Log($"[Multiplayer Demo] Enemy {gameObject.name} took {damage} damage.");
+        }
+    }
+
+    public void ApplyDamage(int damage)
+    {
+        if (isDead) return;
+        
         currentHealth -= damage;
 
         if (currentHealth > 0)
         {
-            animator.SetTrigger("Hit");
-            PlaySound(hurtSFX);
+             animator.SetTrigger("Hit");
+             PlaySound(hurtSFX);
         }
         else
         {
-            Die();
+             Die();
         }
     }
 

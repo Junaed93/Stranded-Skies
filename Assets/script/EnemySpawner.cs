@@ -89,16 +89,25 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log("[EnemySpawner] Initialized (Waiting for Enable)");
     }
 
+    /// <summary>
+    /// Explicitly set the player target.
+    /// </summary>
+    public void SetTarget(Transform playerTransform)
+    {
+        target = playerTransform;
+        Debug.Log("[EnemySpawner] Target manually set to: " + (target != null ? target.name : "NULL"));
+    }
+
     void Update()
     {
-        // Continuously search for player
+        // Fallback search if target is still null
         if (target == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
             {
                 target = player.transform;
-                Debug.Log("[EnemySpawner] Player found, starting to spawn enemies");
+                Debug.Log("[EnemySpawner] Player found via Tag Search");
             }
             return;
         }
@@ -209,27 +218,38 @@ public class EnemySpawner : MonoBehaviour
     /// </summary>
     public void TrySpawnEnemy(Vector3 position, int platformWidth)
     {
-        if (enemyPrefabs.Length == 0) return;
-        if (activeEnemies.Count >= maxEnemies) return;
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        {
+            Debug.LogWarning("[EnemySpawner] TrySpawnEnemy SKIPPED: No enemy prefabs assigned!");
+            return;
+        }
 
-        // FORCE SPAWN (Removed 50% chance for debugging)
-        // if (Random.value > 0.5f) return;
+        if (activeEnemies.Count >= maxEnemies)
+        {
+            Debug.Log("[EnemySpawner] TrySpawnEnemy SKIPPED: Max enemies reached (" + maxEnemies + ")");
+            return;
+        }
 
         int enemyIndex = Random.Range(0, enemyPrefabs.Length);
         GameObject prefab = enemyPrefabs[enemyIndex];
+
+        if (prefab == null)
+        {
+            Debug.LogError("[EnemySpawner] TrySpawnEnemy ERROR: Prefab at index " + enemyIndex + " is NULL!");
+            return;
+        }
 
         GameObject enemy = Instantiate(prefab, position, Quaternion.identity, enemiesParent);
         enemy.name = $"Enemy_Gen_{activeEnemies.Count}";
         activeEnemies.Add(enemy);
         
-        // [FIX] Inject dependency immediately - No tag searching race conditions
         EnemyAI ai = enemy.GetComponent<EnemyAI>();
         if (ai != null)
         {
              ai.player = target; 
         }
 
-        Debug.Log($"[EnemySpawner] Generated enemy at {position}");
+        Debug.Log($"[EnemySpawner] SUCCESS: Spawned {prefab.name} at {position}. Active count: {activeEnemies.Count}");
     }
 
     /// <summary>

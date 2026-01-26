@@ -1,73 +1,34 @@
 using UnityEngine;
 
-/// <summary>
-/// MultiplayerBootstrap.cs
-/// Runs on scene start to initialize multiplayer infrastructure.
-/// Currently a stub - networking will be added later using WebSockets + Spring Boot.
-/// </summary>
 public class MultiplayerBootstrap : MonoBehaviour
 {
-    [Header("References")]
-    public WorldGenerator worldGenerator;
-    public PlayerSpawner playerSpawner;
-    public EnemySpawner enemySpawner;
-    public BossSpawnManager bossSpawner;
+    [SerializeField] private int forcedSeed = 0;
 
     void Start()
     {
-        Debug.Log("[MultiplayerBootstrap] Initializing...");
+        Debug.Log("[MultiplayerBootstrap] Start");
 
-        // 1. Force Mode
-        if (GameModeManager.Instance != null)
-             GameModeManager.Instance.currentMode = GameMode.Multiplayer;
+        if (forcedSeed == 0)
+            forcedSeed = System.DateTime.Now.Millisecond;
 
-        // 2. Initialize Server
-        if (FakeServer.Instance == null)
-             gameObject.AddComponent<FakeServer>();
-
-        // 3. Subscribe to Events
-        FakeServer.Instance.OnSeedReceived += HandleSeedReceived;
-        FakeServer.Instance.OnBossSpawnCommand += HandleBossSpawn;
-
-        // 4. Connect
-        FakeServer.Instance.Connect();
-    }
-
-    void HandleSeedReceived(int seed)
-    {
-        Debug.Log($"[MultiplayerBootstrap] Seed Received: {seed}. Starting World Gen.");
-        
-        // 5. Start World Gen
-        if (worldGenerator != null)
+        if (WorldGenerator.Instance != null)
         {
-            worldGenerator.InitializeWorld(seed, OnWorldReady);
+            WorldGenerator.Instance.InitializeWorld(forcedSeed);
+            Debug.Log("[MultiplayerBootstrap] World initialized");
+            
+            // Enable Enemy Spawning
+            if (EnemySpawner.Instance != null)
+            {
+                EnemySpawner.Instance.EnableSpawning(true);
+            }
+            else
+            {
+                Debug.LogWarning("[MultiplayerBootstrap] EnemySpawner.Instance NOT found. Enemies won't spawn.");
+            }
         }
-    }
-
-    void OnWorldReady()
-    {
-        Debug.Log("[MultiplayerBootstrap] World Ready. Spawning Player.");
-
-        // 6. Spawn Player logic
-        if (playerSpawner != null && worldGenerator != null)
+        else
         {
-            Vector3 spawnPos = worldGenerator.GetSafeSpawnPosition();
-            playerSpawner.SpawnPlayerAt(spawnPos);
-        }
-
-        // 7. Enable Enemy Spawning
-        if (enemySpawner != null)
-        {
-            enemySpawner.EnableSpawning(true);
-        }
-    }
-
-    void HandleBossSpawn()
-    {
-        Debug.Log("[MultiplayerBootstrap] Boss Command Received. Spawning Boss.");
-        if (bossSpawner != null && playerSpawner.localPlayerInstance != null)
-        {
-            bossSpawner.SpawnBoss(playerSpawner.localPlayerInstance.transform);
+            Debug.LogError("[MultiplayerBootstrap] WorldGenerator.Instance is NULL");
         }
     }
 }

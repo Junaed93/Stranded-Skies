@@ -166,7 +166,8 @@ public class CrabBoss : MonoBehaviour, IDamageable
             else
             {
                 // Multiplayer: Request damage from server
-                // PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
+                // NetworkManager.Instance.SendBossAttack(attackDamage);
+                Debug.Log($"[Multiplayer] Boss attacked Player (Visual).");
                 hasDealtDamage = true; 
             }
         }
@@ -242,6 +243,21 @@ public class CrabBoss : MonoBehaviour, IDamageable
     // ---------------- DAMAGE ----------------
 
     public void TakeDamage(int damage)
+    {
+        if (isDead) return;
+
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
+        {
+             ApplyDamage(damage);
+        }
+        else
+        {
+             // Multiplayer: Wait for server confirmation
+             Debug.Log($"[Multiplayer] Boss took {damage} damage (Visual). Waiting for server.");
+        }
+    }
+
+    public void ApplyDamage(int damage)
     {
         if (isDead) return;
 

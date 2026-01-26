@@ -26,9 +26,10 @@ public class Health : MonoBehaviour
         }
         else
         {
-            // Multiplayer: Request damage from server. Do NOT apply locally yet.
-            // NetworkManager.Instance.SendPlayerDamage(damage); 
-            Debug.Log($"[Multiplayer] Player took {damage} damage (Visual). Waiting for server to apply.");
+            // Multiplayer: Request damage from server. 
+            // Demo Fallback: If no server, apply immediately.
+            ApplyDamage(damage);
+            Debug.Log($"[Multiplayer] Player took {damage} damage (Demo Fallback).");
         }
     }
 

@@ -28,9 +28,10 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-            // Multiplayer: Do NOT apply score locally.
-            // RequestScoreChange(amount); // Stub
-            Debug.Log($"[Multiplayer] Score addition requested ({amount}) but waiting for server confirmation.");
+            // Multiplayer: Do NOT apply score locally (Normally).
+            // [DEMO FALLBACK] Apply locally
+            ApplyScore(amount);
+            Debug.Log($"[Multiplayer Demo] Score added: {amount}");
         }
     }
 

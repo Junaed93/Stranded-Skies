@@ -3,7 +3,7 @@ using UnityEngine;
 public class AutoCheckpoint : MonoBehaviour
 {
     [Header("Settings")]
-    public float saveInterval = 0.5f;
+    public float saveInterval = 3.0f; // [USER REQUESTED] 3 second interval
     public LayerMask groundLayer = ~0; // Default to all layers
 
     private Vector3 lastSafePosition;
@@ -16,6 +16,7 @@ public class AutoCheckpoint : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         col = GetComponent<Collider2D>();
         lastSafePosition = transform.position;
+        saveTimer = saveInterval;
     }
 
     void Update()
@@ -38,20 +39,23 @@ public class AutoCheckpoint : MonoBehaviour
         // 1. Check if we are physically grounded
         bool isGrounded = IsGrounded();
         
-        // 2. Check vertical velocity (ensure we aren't falling rapidly or jumping)
-        // Using 0.1f threshold to allow for minor fluctuations
-        bool isStable = rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.1f;
+        // 2. Check vertical velocity (ensure we aren't falling or jumping significantly)
+        // Using 0.05f threshold for better precision
+        bool isStable = rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.05f;
 
-        return isGrounded && isStable;
+        // 3. Ensure we aren't at a dangerously low Y (approaching fall threshold)
+        bool aboveVoid = transform.position.y > -5f;
+
+        return isGrounded && isStable && aboveVoid;
     }
 
     bool IsGrounded()
     {
-        if (col == null) return true; // Fallback
+        if (col == null) return false;
 
-        // Raycast from center down
-        float extraHeight = 0.1f;
-        RaycastHit2D hit = Physics2D.BoxCast(col.bounds.center, col.bounds.size, 0f, Vector2.down, extraHeight, groundLayer);
+        // Raycast from bottom
+        float extraHeight = 0.2f;
+        RaycastHit2D hit = Physics2D.BoxCast(col.bounds.center, col.bounds.size * 0.9f, 0f, Vector2.down, extraHeight, groundLayer);
         
         return hit.collider != null;
     }

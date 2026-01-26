@@ -48,13 +48,14 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.2.13f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\script\EnemyKillTracker.cs" />
     <Compile Include="Assets\script\EnemySpawner.cs" />
+    <Compile Include="Assets\script\GameOverPanel.cs" />
     <Compile Include="Assets\script\PlayerAttack.cs" />
     <Compile Include="Assets\Free Asset - 2D Handcrafted Art\Scripts\CamerController.cs" />
     <Compile Include="Assets\script\PlayerHealth.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\Sensor_HeroKnight.cs" />
     <Compile Include="Assets\script\PlayerHealthUI.cs" />
+    <Compile Include="Assets\script\PauseMenu.cs" />
     <Compile Include="Assets\script\HeroKnight.cs" />
     <Compile Include="Assets\script\EnemyWeapon.cs" />
     <Compile Include="Assets\script\IDamageable.cs" />
@@ -62,21 +63,19 @@
     <Compile Include="Assets\script\GameSession.cs" />
     <Compile Include="Assets\script\WorldGenerator.cs" />
     <Compile Include="Assets\script\PlayerCombat.cs" />
-    <Compile Include="Assets\script\GameModeManager.cs" />
     <Compile Include="Assets\script\SocketClient.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
     <Compile Include="Assets\script\CombatSystem.cs" />
     <Compile Include="Assets\script\RemotePlayerController.cs" />
-    <Compile Include="Assets\script\BossSpawnManager.cs" />
     <Compile Include="Assets\script\PlatformAttach.cs" />
     <Compile Include="Assets\script\ScoreManager.cs" />
     <Compile Include="Assets\script\EnemyAttack.cs" />
     <Compile Include="Assets\Hero Knight - Pixel Art\Demo\DestroyEvent_HeroKnight.cs" />
+    <Compile Include="Assets\script\BootLoader.cs" />
     <Compile Include="Assets\script\GolemBoss.cs" />
     <Compile Include="Assets\script\EnemyController.cs" />
     <Compile Include="Assets\script\SkullBoss.cs" />
     <Compile Include="Assets\script\GolemSpawner.cs" />
-    <Compile Include="Assets\script\FakeServer.cs" />
     <Compile Include="Assets\script\MultiplayerBootstrap.cs" />
     <Compile Include="Assets\script\BossHealthUI.cs" />
     <Compile Include="Assets\script\PlayerSpawner.cs" />
@@ -85,10 +84,12 @@
     <Compile Include="Assets\script\ScoreUI.cs" />
     <Compile Include="Assets\script\SeedManager.cs" />
     <Compile Include="Assets\script\AutoCheckpoint.cs" />
+    <Compile Include="Assets\script\MainMenu.cs" />
     <Compile Include="Assets\script\FloatingPlatform.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemyTest.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemySelector.cs" />
     <Compile Include="Assets\script\EnemyAI.cs" />
+    <Compile Include="Assets\script\GameManager.cs" />
     <Compile Include="Assets\script\SocketReceiver.cs" />
     <Compile Include="Assets\script\ParallaxController.cs" />
     <Compile Include="Assets\script\CrabBoss.cs" />

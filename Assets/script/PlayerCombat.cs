@@ -185,9 +185,13 @@ public class PlayerCombat : MonoBehaviour, IDamageable
              else
              {
                  // Multiplayer: Intent Only
-                 // Stub: NetworkManager.Instance.SendAttack(enemy.name, attackDamage);
-                 Debug.Log($"[Multiplayer] Attacked {enemy.name}. Visuals only. Waiting for server to apply damage.");
-                 PlaySound(swordHitSFX); // Play sound locally for feedback
+                 // [DEMO FALLBACK] Apply damage immediately if no network system exists
+                 if (enemy.TryGetComponent(out IDamageable damageable))
+                 {
+                     damageable.TakeDamage(attackDamage);
+                     PlaySound(swordHitSFX);
+                     Debug.Log($"[Multiplayer Demo] HIT {enemy.name} for {attackDamage} damage.");
+                 }
              }
         }
     }
@@ -225,7 +229,9 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         else
         {
             // Multiplayer: Intent only, actual damage applied via NetworkApplyDamage (stub)
-            Debug.Log("[Multiplayer] Player health change requested but not applied locally.");
+            // [DEMO FALLBACK] Apply locally
+            ApplyDamage(damage);
+            Debug.Log("[Multiplayer Demo] Player health applied locally.");
         }
     }
 
@@ -308,11 +314,22 @@ public class PlayerCombat : MonoBehaviour, IDamageable
             rb.linearVelocity = Vector2.zero;
             
             // Move to last safe position BEFORE enabling scripts
+            // Move to last safe position BEFORE enabling scripts
+            Vector3 respawnPos = Vector3.zero;
             if (autoCheckpoint != null)
             {
-                rb.position = autoCheckpoint.GetLastSafePosition();
-                transform.position = autoCheckpoint.GetLastSafePosition();
+                respawnPos = autoCheckpoint.GetLastSafePosition();
             }
+
+            // Fallback: If the saved position is below a threshold, pick 10,0,0 (start area)
+            if (respawnPos.y < -5f)
+            {
+                respawnPos = new Vector3(10f, 2f, 0f); // Default start area
+                Debug.Log("[PlayerCombat] Checkpoint was UNSAFE (falling). Respawning at start area.");
+            }
+
+            rb.position = respawnPos;
+            transform.position = respawnPos;
             rb.WakeUp();
         }
 

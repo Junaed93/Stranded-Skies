@@ -3,170 +3,162 @@ using UnityEngine.Tilemaps;
 
 public class WorldGenerator : MonoBehaviour
 {
-    public static WorldGenerator Instance { get; private set; }
+    public static WorldGenerator Instance;
 
     [Header("References")]
-    public Tilemap groundTilemap;
-    public TileBase[] groundTiles;
-    public Transform player; 
+    [SerializeField] private Tilemap groundTilemap;
+    [SerializeField] private TileBase groundTile;
 
-    [Header("Settings")]
-    public int seed = 12345;
-    
-    private int lastX = 0;
-    private int lastY = -2;
+    [Header("Generation Settings")]
+    [SerializeField] private int seed = 0;
+    [SerializeField] private int startY = -2;
+    [SerializeField] private int generateAheadDistance = 50;
 
-    // Awake removed (Merged below to avoid duplicate error)
+    private Transform player;
+    private int lastX;
+    private int lastY;
 
-    // [NEW] Initialization Callback
-    private System.Action onWorldReadyCallback;
+    private bool initialized;
+    private bool playerRegistered;
 
-    // Start removed to prevent auto-run.
-    // Bootstrap must call InitializeWorld.
+    // =========================
+    // UNITY LIFECYCLE
+    // =========================
 
-    public void InitializeWorld(int serverSeed, System.Action onReady)
+    void Awake()
     {
-        Debug.Log($"[WorldGenerator] Initializing with Seed: {serverSeed}");
-        seed = serverSeed;
-        onWorldReadyCallback = onReady;
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
 
-        SetSeed(seed);
-        
-        // Notify Bootstrap
-        onWorldReadyCallback?.Invoke();
+        if (groundTilemap == null)
+            groundTilemap = GetComponentInChildren<Tilemap>();
+
+        Debug.Log("[WorldGenerator] Awake");
     }
 
-    void Update() {
-        if (player == null)
-        {
-             GameObject p = GameObject.FindGameObjectWithTag("Player");
-             if (p != null) player = p.transform;
-             return;
-        }
+    void Start()
+    {
+        if (seed == 0)
+            seed = System.DateTime.Now.Millisecond + Random.Range(0, 99999);
 
-        // AGGRESSIVE GENERATION
-        // If player is within 60 units of the edge, BUILD MORE.
-        // Don't wait.
-        if (player.position.x > lastX - 60) 
+        InitializeWorld(seed);
+    }
+
+    void Update()
+    {
+        if (!initialized || !playerRegistered) return;
+
+        if (player.position.x + generateAheadDistance > lastX)
         {
             GenerateNextSection();
         }
     }
 
-    public void SetSeed(int newSeed) {
-        seed = newSeed;
-        if (groundTilemap != null) groundTilemap.ClearAllTiles();
-        
-        lastX = 0; 
-        
-        // Sync starting height with player position if possible
-        if (player != null)
-        {
-            // Use -1.5 to be safe under feet
-            lastY = Mathf.FloorToInt(player.position.y - 1.5f);
-            Debug.Log($"[WorldGenerator] Synced generation height to Player Y: {lastY}");
-        }
-        else
-        {
-            lastY = -2;
-        }
+    // =========================
+    // INITIALIZATION
+    // =========================
+
+    public void InitializeWorld(int worldSeed)
+    {
+        if (initialized) return;
+
+        initialized = true;
+        seed = worldSeed;
 
         Random.InitState(seed);
-        
-        // Ensure we have tiles
-        if (groundTiles == null || groundTiles.Length == 0)
-        {
-            Debug.LogError("No ground tiles assigned in WorldGenerator!");
-            return;
-        }
+        groundTilemap.ClearAllTiles();
 
-        // Generate SAFE Start Zone: Start 15 units BEHIND player, go 40 units total
-        // Note: If player is at 0, startX is -15. Center is roughly +5.
-        // We force alignment to ensure no gap falls.
-        int startX = Mathf.FloorToInt(player != null ? player.position.x : 0) - 15;
-        int safeWidth = 40;
-        
-        SpawnPlatform(startX, lastY, safeWidth); 
-        lastX = startX + safeWidth;
+        lastX = 0;
+        lastY = startY;
 
-        // CRITICAL FIX: Teleport player to valid ground immediately
-        if (player != null)
-        {
-            float safeX = startX + (safeWidth / 2f);
-            float safeY = lastY + 2f; // +2 to be safely above
-            player.position = new Vector3(safeX, safeY, 0);
-            
-            // Kill any initial velocity
-            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-            if (rb != null) rb.linearVelocity = Vector2.zero;
-            
-            Debug.Log($"[WorldGenerator] FORCE-TELEPORTED Player to Safe Start: {player.position}");
-        }
-    }
+        GenerateStartPlatform();
 
-    void GenerateNextSection() {
-        // Deterministic generation based on seed and position
-        Random.InitState(seed + lastX); 
-        int gap = Random.Range(2, 4); // Smaller gaps (was 2,5)
-        int width = 5; 
-        int y = Mathf.Clamp(lastY + Random.Range(-2, 3), -5, 2); 
-
-        SpawnPlatform(lastX + gap, y, width);
-        Debug.Log($"[WorldGenerator] Generated platform at X:{lastX + gap} Y:{y}");
-        
-        // Call Enemy Spawner during world gen
-        float platformCenterX = (lastX + gap) + (width / 2f);
-        Vector3 spawnPos = new Vector3(platformCenterX, y + 1, 0); 
-        
-        EnemySpawner.Instance?.TrySpawnEnemy(spawnPos, width);
-        
-        lastX += gap + width;
-        lastY = y;
-    }
-
-    void SpawnPlatform(int startX, int y, int width) {
-        if (groundTiles.Length == 0) return;
-
-        for (int i = 0; i < width; i++)
-        {
-            groundTilemap.SetTile(new Vector3Int(startX + i, y, 0), groundTiles[0]);
-        }
+        Debug.Log($"[WorldGenerator] Initialized with seed {seed}");
     }
 
     /// <summary>
-    /// Returns a guaranteed safe spawn point on the first platform.
-    /// Used by PlayerSpawner to prevent spawning in gaps/void.
+    /// MUST be called by PlayerSpawner after spawning the local player
     /// </summary>
-    public Vector3 GetSafeSpawnPosition()
+    public void RegisterPlayer(Transform playerTransform)
     {
-        // Increased safety height to prevent clipping
-        return new Vector3(lastX - 20, lastY + 5f, 0);
-    }
+        if (playerRegistered) return;
 
-    void Awake()
-    {
-        if (Instance != null && Instance != this) Destroy(gameObject);
-        else Instance = this;
-        
-        // Randomize Seed on Awake (Unified Logic)
-        if (seed == 0 || seed == 12345) 
+        playerRegistered = true;
+        player = playerTransform;
+
+        // Link with EnemySpawner
+        if (EnemySpawner.Instance != null)
         {
-            seed = (int)System.DateTime.Now.Ticks;
-            Debug.Log($"[WorldGenerator] Randomized Seed: {seed}");
+            EnemySpawner.Instance.SetTarget(player);
         }
+
+        // Force safe spawn on generated ground
+        Vector3 spawnPos = new Vector3(10f, lastY + 2f, 0f);
+        player.position = spawnPos;
+
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+            rb.linearVelocity = Vector2.zero;
+
+        Debug.Log("[WorldGenerator] Player registered");
     }
 
-    void OnGUI()
+    // =========================
+    // GENERATION
+    // =========================
+
+    private void GenerateStartPlatform()
     {
-        if (player == null) return;
-        
-        GUIStyle style = new GUIStyle();
-        style.fontSize = 24;
-        style.normal.textColor = Color.yellow;
-        
-        float threshold = lastX - 45;
-        string status = player.position.x > threshold ? "GENERATING NOW" : "Waiting for move";
-        
-        GUI.Label(new Rect(10, 10, 500, 100), $"Player X: {player.position.x:F1}\nThreshold: {threshold} (LastX: {lastX})\nStatus: {status}", style);
+        SpawnPlatform(-10, lastY, 40);
+        lastX = 30;
+    }
+
+    private void GenerateNextSection()
+    {
+        int gap = Random.Range(2, 4);
+        int width = Random.Range(4, 7);
+        int y = Mathf.Clamp(lastY + Random.Range(-1, 2), -4, 3);
+
+        int startX = lastX + gap;
+        SpawnPlatform(startX, y, width);
+
+        // Try to spawn an enemy on this new platform
+        if (EnemySpawner.Instance != null)
+        {
+            float enemyX = startX + (width / 2f);
+            Vector3 enemyPos = new Vector3(enemyX, y + 1.5f, 0); 
+            Debug.Log($"[WorldGenerator] Requesting enemy spawn at {enemyPos}");
+            EnemySpawner.Instance.TrySpawnEnemy(enemyPos, width);
+        }
+        else
+        {
+            Debug.LogWarning("[WorldGenerator] EnemySpawner.Instance is NULL. Skipping enemy spawn.");
+        }
+
+        lastX = startX + width;
+        lastY = y;
+
+        Debug.Log($"[WorldGenerator] Platform generated at X:{startX} Y:{y}");
+    }
+
+    private void SpawnPlatform(int startX, int y, int width)
+    {
+        if (groundTilemap == null || groundTile == null)
+        {
+            Debug.LogError("[WorldGenerator] Tilemap or Tile is NULL");
+            return;
+        }
+
+        for (int i = 0; i < width; i++)
+        {
+            groundTilemap.SetTile(
+                new Vector3Int(startX + i, y, 0),
+                groundTile
+            );
+        }
     }
 }

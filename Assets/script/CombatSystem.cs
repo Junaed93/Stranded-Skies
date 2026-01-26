@@ -12,24 +12,16 @@ public class CombatSystem : MonoBehaviour
 
     void Start()
     {
-        // Listen to Server Approval for Damage
-        if (FakeServer.Instance != null)
-        {
-            FakeServer.Instance.OnDamageApproved += ApplyDamageLocally;
-        }
+        // [Multiplayer] In a real implementation, we would listen to NetworkManager events here.
     }
 
     public void RequestDamage(GameObject target, int amount)
     {
-        if (GameModeManager.Instance.IsMultiplayer())
+        if (GameSession.Instance.mode == GameMode.Multiplayer)
         {
-            // Send request to server
-            FakeServer.Instance.RequestDamage(amount, target.name);
-            
-            // In a real game, we wait for server response.
-            // For now, FakeServer fires event immediately.
-            // We pass the "target" implicitly via the event handling logic below.
-            // Note: A real implementation would need a NetworkID.
+            // Multiplayer: Request damage from server
+            // NetworkManager.Instance.SendDamageRequest(target.name, amount);
+            Debug.Log($"[CombatSystem] Requested {amount} damage on {target.name} (Waiting for Server)");
         }
         else
         {
@@ -38,13 +30,10 @@ public class CombatSystem : MonoBehaviour
         }
     }
 
-    // Callback from Server
-    void ApplyDamageLocally(int amount)
+    // Callback from Server (to be called by NetworkManager)
+    public void ApplyDamageLocally(GameObject target, int amount)
     {
-        // In this stub, we don't know who the target was because FakeServer event is simple.
-        // For the sake of this refactor, we will assume the Client who asked knows.
-        // But properly, we should pass TargetID back and forth.
-        Debug.Log($"[CombatSystem] Server approved {amount} damage (Stub Application)");
+        ApplyDamageToTarget(target, amount);
     }
 
     public void ApplyDamageToTarget(GameObject target, int amount)

@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ParallaxController : MonoBehaviour
 {
-    private float startPos;
+    private float startPosX, startPosY;
     private float length;
 
     public GameObject cam;
@@ -11,29 +11,34 @@ public class ParallaxController : MonoBehaviour
 
     void Start()
     {
-        startPos = transform.position.x;
+        startPosX = transform.position.x;
+        startPosY = transform.position.y;
         length = GetComponent<SpriteRenderer>().bounds.size.x;
     }
 
     void FixedUpdate()
     {
-        float distance = cam.transform.position.x * parallaxEffect;
-        float movement = cam.transform.position.x * (1 - parallaxEffect);
+        // X movement
+        float distX = cam.transform.position.x * parallaxEffect;
+        float movementX = cam.transform.position.x * (1 - parallaxEffect);
+
+        // Y movement
+        float distY = cam.transform.position.y * parallaxEffect;
 
         transform.position = new Vector3(
-            startPos + distance,
-            transform.position.y,
+            startPosX + distX,
+            startPosY + distY,
             transform.position.z
         );
 
-        // Infinite scrolling
-        if (movement > startPos + length)
+        // Infinite scrolling (X only)
+        if (movementX > startPosX + length)
         {
-            startPos += length;
+            startPosX += length;
         }
-        else if (movement < startPos - length)
+        else if (movementX < startPosX - length)
         {
-            startPos -= length;
+            startPosX -= length;
         }
     }
 }
