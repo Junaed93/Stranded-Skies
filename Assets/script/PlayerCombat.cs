@@ -290,6 +290,19 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         {
             Debug.Log("Game Over - No respawns left.");
 
+            // [NEW] Trigger Backend Report
+            if (ScoreReporter.Instance != null)
+            {
+                ScoreReporter.Instance.ReportGameOver();
+            }
+            else
+            {
+                // Create a temporary reporter if one doesn't exist (failsafe)
+                GameObject go = new GameObject("TemporaryScoreReporter");
+                ScoreReporter tempReporter = go.AddComponent<ScoreReporter>();
+                tempReporter.ReportGameOver();
+            }
+
             GameOverPanel gameOver = FindObjectOfType<GameOverPanel>();
             if (gameOver != null)
             {

@@ -86,6 +86,7 @@
     <Compile Include="Assets\script\SeedManager.cs" />
     <Compile Include="Assets\script\AutoCheckpoint.cs" />
     <Compile Include="Assets\script\MainMenu.cs" />
+    <Compile Include="Assets\script\ScoreReporter.cs" />
     <Compile Include="Assets\script\GameOverPanelMP.cs" />
     <Compile Include="Assets\script\FloatingPlatform.cs" />
     <Compile Include="Assets\Enemy Galore 1 - Pixel Art\Script\EnemyTest.cs" />
