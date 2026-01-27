@@ -72,29 +72,42 @@ For multiplayer sessions, the client establishes a persistent WebSocket connecti
     *   Open the `MainMenu` scene located in `Assets/Scenes`.
     *   Press the **Play** button in the Unity Editor.
 
-## Project Structure
+## Assets File Structure
 
-*   `Assets/script`: Contains all C# scripts for game logic.
-    *   **Core Systems**:
-        *   `GameSession.cs`: Manages global game state.
-        *   `ScoreManager.cs`: Handles real-time scoring.
-        *   `SeedManager.cs`: Manages procedural generation seeds.
-    *   **Entities (Player & Enemy)**:
-        *   `HeroKnight.cs`, `PlayerCombat.cs`: Player controller and combat logic.
-        *   `EnemyAI.cs`, `EnemyController.cs`: Base behavior for enemies.
-        *   `Boss Scripts`: `GolemBoss.cs`, `CrabBoss.cs`, `SkullBoss.cs`.
-    *   **Networking**:
-        *   `SocketClient.cs`: Main WebSocket client.
-        *   `SocketReceiver.cs`: Handles incoming network messages.
-        *   `ScoreReporter.cs`: Handles HTTP POST requests.
-    *   **World Generation**:
-        *   `WorldGenerator.cs`: Main procedural generation logic.
-        *   `ParallaxController.cs`: Background visual effects.
-    *   **UI**:
-        *   `MainMenu.cs`, `PauseMenu.cs`, `GameOverPanel.cs`: UI interaction scripts.
-*   `Assets/Scenes`: Game scenes including MainMenu, Gameplay, and Boss levels.
-*   `Assets/Prefabs`: Reusable game objects like the Player, Enemies, and items.
-*   `Assets/Sprites`: 2D art assets for characters, environments, and UI.
+```text
+Assets/
+├── Animation/                  # Shared animation resources
+├── Audio/                      # Game music and sound effects
+├── Scenes/                     # Unity Scenes
+│   ├── MainMenu.unity
+│   └── Gameplay.unity
+├── script/                     # C# Source Code
+│   ├── [Core]
+│   │   ├── GameSession.cs      # Global state manager
+│   │   ├── ScoreManager.cs     # Scoring logic
+│   │   └── SeedManager.cs      # RNG handling
+│   ├── [Entities]
+│   │   ├── HeroKnight.cs       # Player controller
+│   │   ├── EnemyAI.cs          # Base enemy logic
+│   │   └── *Boss.cs            # Specific boss scripts (Crab, Golem, Skull)
+│   ├── [Network]
+│   │   ├── SocketClient.cs     # WebSocket handling
+│   │   └── ScoreReporter.cs    # HTTP POST handling
+│   └── [World]
+│       └── WorldGenerator.cs   # Procedural generation
+├── Settings/                   # Rendering and Input settings
+├── [Art Packs]                 # Third-party asset packages
+│   ├── AlienTileSet/
+│   ├── Bringer Of Death/
+│   ├── Enemy Galore 1/
+│   ├── Hero Knight - Pixel Art/
+│   └── ...
+├── Player.prefab               # Main Player Prefab
+├── RemotePlayer.prefab         # Networked Player Prefab
+├── GolemBoss.prefab            # Boss Prefabs
+├── Crab.prefab
+└── ...
+```
 
 ## Contributing
 
