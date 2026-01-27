@@ -63,7 +63,7 @@ For multiplayer sessions, the client establishes a persistent WebSocket connecti
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/YourUsername/Stranded-Skies.git
+    git clone https://github.com/Junaed93/Stranded-Skies.git
     ```
 2.  **Open in Unity:**
     *   Launch Unity Hub.
