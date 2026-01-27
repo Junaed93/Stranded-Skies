@@ -24,6 +24,34 @@ Stranded Skies is an action-packed 2D platformer/RPG built in Unity. Take contro
 | **Block** | `Right Mouse Button` |
 | **Roll** | `Left Shift` |
 
+## Backend Integration
+
+The game acts as a frontend client that communicates with a Spring Boot backend for multiplayer features and data persistence.
+
+### 1. Score Reporting (POST)
+When a player's run ends (Game Over), the client sends a `POST` request to the backend with their performance data.
+*   **Endpoint:** `POST /api/scores`
+*   **Handler:** `ScoreReporter.cs`
+*   **Payload (JSON):**
+    ```json
+    {
+      "finalScore": 1500,
+      "gameMode": "SinglePlayer",
+      "timestamp": "2023-10-27T10:00:00Z",
+      "playerId": "User123" 
+    }
+    ```
+*   **Authentication:** The client includes a Bearer Token in the `Authorization` header. This token is auto-detected from URL parameters (WebGL) or command-line arguments (Desktop).
+
+### 2. Real-Time Multiplayer (WebSockets)
+For multiplayer sessions, the client establishes a persistent WebSocket connection to synchronize player movement and state.
+*   **Endpoint:** `ws://localhost:8080/game`
+*   **Handler:** `SocketClient.cs`
+*   **Protocol:**
+    *   **JOIN:** Client sends `{"type": "JOIN"}` to enter the lobby.
+    *   **MOVE:** Client sends position updates (x, y, velocity) to be broadcast to other players.
+    *   **LEAVE:** Server notifies clients when a player disconnects.
+
 ## Getting Started
 
 ### Prerequisites
@@ -47,11 +75,23 @@ Stranded Skies is an action-packed 2D platformer/RPG built in Unity. Take contro
 ## Project Structure
 
 *   `Assets/script`: Contains all C# scripts for game logic.
-    *   **AI & Enemies**: `EnemyAI.cs`, `BossWall.cs`, various individual boss scripts.
-    *   **Player**: `HeroKnight.cs`, `PlayerCombat.cs`, `PlayerHealth.cs`.
-    *   **Networking**: `SocketClient.cs`, `RemotePlayerController.cs`.
-    *   **World**: `WorldGenerator.cs`, `ParallaxController.cs`, `FloatingPlatform.cs`.
-    *   **UI & System**: `MainMenu.cs`, `PauseMenu.cs`, `ScoreUI.cs`.
+    *   **Core Systems**:
+        *   `GameSession.cs`: Manages global game state.
+        *   `ScoreManager.cs`: Handles real-time scoring.
+        *   `SeedManager.cs`: Manages procedural generation seeds.
+    *   **Entities (Player & Enemy)**:
+        *   `HeroKnight.cs`, `PlayerCombat.cs`: Player controller and combat logic.
+        *   `EnemyAI.cs`, `EnemyController.cs`: Base behavior for enemies.
+        *   `Boss Scripts`: `GolemBoss.cs`, `CrabBoss.cs`, `SkullBoss.cs`.
+    *   **Networking**:
+        *   `SocketClient.cs`: Main WebSocket client.
+        *   `SocketReceiver.cs`: Handles incoming network messages.
+        *   `ScoreReporter.cs`: Handles HTTP POST requests.
+    *   **World Generation**:
+        *   `WorldGenerator.cs`: Main procedural generation logic.
+        *   `ParallaxController.cs`: Background visual effects.
+    *   **UI**:
+        *   `MainMenu.cs`, `PauseMenu.cs`, `GameOverPanel.cs`: UI interaction scripts.
 *   `Assets/Scenes`: Game scenes including MainMenu, Gameplay, and Boss levels.
 *   `Assets/Prefabs`: Reusable game objects like the Player, Enemies, and items.
 *   `Assets/Sprites`: 2D art assets for characters, environments, and UI.
