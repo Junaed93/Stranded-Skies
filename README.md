@@ -4,12 +4,15 @@ Stranded Skies is an action-packed 2D platformer/RPG built in Unity. Take contro
 
 ## Features
 
-*   **Dynamic Combat:** Utilize a combo-based attack system, defensive blocking, and dodge rolls to master combat.
-*   **Multiplayer:** Connect with friends and play together online.
-*   **Epic Boss Fights:** Face off against challenging bosses including the Golem, Giant Crab, and Skull Guard.
-*   **Procedural Generation:** Experience new levels every time with world generation and seed management.
-*   **Diverse Enemies:** Fight a variety of enemies with unique AI and attack patterns.
-*   **High Score System:** Track your progress and compete for the best scores.
+*   **Dynamic Combat:** Utilize a combo-based attack system, defensive blocking, and dodge rolls to master combat (`PlayerCombat.cs`, `CombatSystem.cs`).
+*   **Multiplayer:** Connect with friends and play together online. Powered by a custom socket-based networking system (`SocketClient.cs`, `SocketReceiver.cs`, `MultiplayerBootstrap.cs`).
+*   **Epic Boss Fights:** Face off against challenging bosses:
+    *   **Golem:** A heavy hitter (`GolemBoss.cs`).
+    *   **Giant Crab:** A crustacean menace (`CrabBoss.cs`).
+    *   **Skull Guard:** A skeletal warrior (`SkullBoss.cs`).
+*   **Procedural Generation:** Experience new levels every time with robust world generation (`WorldGenerator.cs`) and seed management (`SeedManager.cs`).
+*   **Diverse Enemies:** Fight a variety of enemies with unique AI (`EnemyAI.cs`, `EnemyController.cs`) and spawner systems (`EnemySpawner.cs`).
+*   **Score System:** Track your progress and compete for the best scores using the integrated scoring system (`ScoreManager.cs`, `ScoreReporter.cs`).
 
 ## Controls
 
@@ -43,9 +46,14 @@ Stranded Skies is an action-packed 2D platformer/RPG built in Unity. Take contro
 
 ## Project Structure
 
-*   `Assets/script`: Contains all C# scripts for game logic, AI, player control, and networking.
+*   `Assets/script`: Contains all C# scripts for game logic.
+    *   **AI & Enemies**: `EnemyAI.cs`, `BossWall.cs`, various individual boss scripts.
+    *   **Player**: `HeroKnight.cs`, `PlayerCombat.cs`, `PlayerHealth.cs`.
+    *   **Networking**: `SocketClient.cs`, `RemotePlayerController.cs`.
+    *   **World**: `WorldGenerator.cs`, `ParallaxController.cs`, `FloatingPlatform.cs`.
+    *   **UI & System**: `MainMenu.cs`, `PauseMenu.cs`, `ScoreUI.cs`.
 *   `Assets/Scenes`: Game scenes including MainMenu, Gameplay, and Boss levels.
-*   `Assets/Prefabs`: Reusable game objects like the Player, Enemies, and items (spread across various folders).
+*   `Assets/Prefabs`: Reusable game objects like the Player, Enemies, and items.
 *   `Assets/Sprites`: 2D art assets for characters, environments, and UI.
 
 ## Contributing
@@ -55,4 +63,3 @@ Stranded Skies is an action-packed 2D platformer/RPG built in Unity. Take contro
 3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
 4.  Push to the branch (`git push origin feature/AmazingFeature`).
 5.  Open a Pull Request.
-
