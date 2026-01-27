@@ -5,7 +5,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Movement Stats")]
     public float speed = 3f;
     public float stopDistance = 1.5f;
-    public float chaseRange = 50f; // Was 10f - Made aggressive
+    public float chaseRange = 50f;
 
     [Header("Attack Stats")]
     public float attackRange = 2.5f;
@@ -14,7 +14,7 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Edge Detection")]
     public bool enableEdgeDetection = true;
-    public float groundCheckDistance = 10f; // Was 1.5f - Safer detection
+    public float groundCheckDistance = 10f;
     public float edgeCheckOffset = 0.5f;
     public LayerMask groundLayer;
 
@@ -61,7 +61,6 @@ public class EnemyAI : MonoBehaviour
             if (p) 
             {
                 player = p.transform;
-                 // Debug.Log($"[EnemyAI] Found player: {p.name}");
             }
             return;
         }
@@ -121,17 +120,15 @@ public class EnemyAI : MonoBehaviour
         else if (atk == 2) animator.SetTrigger("Attack 2");
         else animator.SetTrigger("Attack 3");
 
-        PlaySound(attackSFX); // 🔊 SAME SOUND FOR ALL ATTACKS
+        PlaySound(attackSFX);
 
         isAttacking = true;
         nextAttackTime = Time.time + 1f / attackRate;
 
-        // [FIX] Auto-trigger damage in case Animation Event is missing
         Invoke(nameof(DealDamage), 0.5f);
         Invoke(nameof(ForceEndAttack), 1.2f);
     }
 
-    // 🔥 Animation Event (HIT FRAME) - Now also called by Invoke
     public void DealDamage()
     {
         if (!player) 
@@ -142,44 +139,34 @@ public class EnemyAI : MonoBehaviour
 
         float dist = Vector2.Distance(transform.position, player.position);
         
-        // Relaxed Hit Check
-        if (dist <= attackRange)
+        float dist = Vector2.Distance(transform.position, player.position);
+
+        if (GameSession.Instance.mode == GameMode.SinglePlayer)
         {
-             if (GameSession.Instance.mode == GameMode.SinglePlayer)
+             if (player.TryGetComponent(out IDamageable damageable))
              {
-                 // Singleplayer: Direct Damage
-                 if (player.TryGetComponent(out IDamageable damageable))
-                 {
-                     damageable.TakeDamage(attackDamage);
-                 }
-                 Debug.Log($"[EnemyAI] Hit Player for {attackDamage}");
+                 damageable.TakeDamage(attackDamage);
              }
-             else
-             {
-                 // Multiplayer: Intent Only
-                 // Check if we are in "Demo Mode" (No Server)
-                 // If true, apply damage anyway for playability.
-                 bool networkActive = false; // Stub: Update when NetworkManager exists
-                 
-                 if (!networkActive)
-                 {
-                      if (player.TryGetComponent(out IDamageable damageable))
-                      {
-                          damageable.TakeDamage(attackDamage);
-                          Debug.Log($"[Multiplayer Demo] {gameObject.name} hit Player for {attackDamage}");
-                      }
-                      else
-                      {
-                          Debug.LogWarning($"[EnemyAI] Player found but missing IDamageable component!");
-                      }
-                 }
-                 
-                 Debug.Log($"[Multiplayer] Enemy {gameObject.name} attack processed.");
-             }
+             Debug.Log($"[EnemyAI] Hit Player for {attackDamage}");
         }
         else
         {
-            Debug.Log($"[EnemyAI] {gameObject.name} attack MISSED. Distance: {dist}, Range: {attackRange}");
+             bool networkActive = false; 
+             
+             if (!networkActive)
+             {
+                  if (player.TryGetComponent(out IDamageable damageable))
+                  {
+                      damageable.TakeDamage(attackDamage);
+                      Debug.Log($"[Multiplayer Demo] {gameObject.name} hit Player for {attackDamage}");
+                  }
+                  else
+                  {
+                      Debug.LogWarning($"[EnemyAI] Player found but missing IDamageable component!");
+                  }
+             }
+             
+             Debug.Log($"[Multiplayer] Enemy {gameObject.name} attack processed.");
         }
     }
 
@@ -208,7 +195,6 @@ public class EnemyAI : MonoBehaviour
 
     bool IsGroundAhead()
     {
-        // AUTO-FIX: If groundLayer needs Default (fixes movement on untagged platforms)
         int layerMask = groundLayer;
         if (layerMask == LayerMask.GetMask("Ground"))
              layerMask |= LayerMask.GetMask("Default");
@@ -240,21 +226,16 @@ public class EnemyAI : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        // 1. Attack Range (Red)
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
 
-        // 2. Chase Range (Cyan)
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, chaseRange);
         
-        // 3. Connection Line to Player
         if (player != null)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(transform.position, player.position);
         }
     }
-
-    // OnGUI Removed for cleanup
 }

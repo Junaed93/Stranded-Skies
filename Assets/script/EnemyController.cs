@@ -23,7 +23,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         audioSource = GetComponent<AudioSource>();
         audioSource.playOnAwake = false;
         audioSource.loop = false;
-        audioSource.spatialBlend = 0f; // 🔥 FORCE 2D AUDIO
+        audioSource.spatialBlend = 0f;
     }
 
     void Start()
@@ -41,8 +41,8 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
         else
         {
-            // Multiplayer: Wait for server
-            // [DEMO FALLBACK] Apply locally
+        else
+        {
             ApplyDamage(damage);
             Debug.Log($"[Multiplayer Demo] Enemy {gameObject.name} took {damage} damage.");
         }
@@ -73,7 +73,6 @@ public class EnemyController : MonoBehaviour, IDamageable
         PlaySound(deathSFX);
         animator.SetTrigger("Death");
 
-        // [NEW] Add score
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(50);
 
@@ -86,7 +85,6 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (myCollider != null)
             myCollider.enabled = false;
 
-        // 🔥 Disable ALL scripts except this one
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
         foreach (MonoBehaviour s in scripts)
         {
@@ -95,7 +93,6 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
-    // Called via Animation Event at the END of death animation
     public void OnDeathAnimationEnd()
     {
         Destroy(gameObject, 0.5f);
@@ -105,10 +102,6 @@ public class EnemyController : MonoBehaviour, IDamageable
     {
         if (clip == null)
         {
-            Debug.LogWarning("❌ Missing audio clip on " + name);
-            return;
-        }
-
         audioSource.PlayOneShot(clip);
         Debug.Log("🔊 Playing sound: " + clip.name);
     }

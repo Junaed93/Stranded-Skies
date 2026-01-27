@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class FloatingPlatform : MonoBehaviour
 {
-    public float moveDistance = 2f;   // how far it moves left/right
-    public float speed = 2f;          // movement speed
+    public float moveDistance = 2f;
+    public float speed = 2f;
 
     Vector3 startPos;
 

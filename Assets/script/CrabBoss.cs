@@ -40,15 +40,14 @@ public class CrabBoss : MonoBehaviour, IDamageable
     bool isAttacking;
     bool hasDealtDamage;
     float moveDir;
-    bool phaseScoreGiven = false; // [NEW]
+    bool phaseScoreGiven = false;
 
     void Start()
     {
-        // In Multiplayer: All bosses have 500 HP and no boss walls
         if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
         {
             maxHealth = 500;
-            bossWall = null; // No boss walls in multiplayer
+            bossWall = null;
         }
 
         currentHealth = maxHealth;
@@ -71,7 +70,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
     {
         if (isDead) return;
         
-        // Continuously search for player if not found
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -88,7 +86,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
             return;
         }
 
-        // [NEW] Report Proximity to Boss UI
         if (BossHealthUI.Instance != null)
         {
             BossHealthUI.Instance.ReportProximity(this, distance, currentHealth, maxHealth);
@@ -126,8 +123,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(moveDir * moveSpeed, rb.linearVelocity.y);
     }
 
-    // ---------------- ATTACK ----------------
-
     void StartAttack()
     {
         isAttacking = true;
@@ -137,7 +132,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
         animator.SetBool("Run", false);
         animator.SetTrigger("Attack");
 
-        // Play Random Attack Sound
         if (attackSounds.Length > 0 && audioSource != null)
         {
             AudioClip clip = attackSounds[Random.Range(0, attackSounds.Length)];
@@ -165,8 +159,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
             }
             else
             {
-                // Multiplayer: Request damage from server
-                // NetworkManager.Instance.SendBossAttack(attackDamage);
                 Debug.Log($"[Multiplayer] Boss attacked Player (Visual).");
                 hasDealtDamage = true; 
             }
@@ -177,8 +169,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
     {
         isAttacking = false;
     }
-
-    // ---------------- MOVEMENT ----------------
 
     void MoveTowardsPlayer()
     {
@@ -218,8 +208,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
         return facing == toPlayer;
     }
 
-    // ---------------- EDGE DETECTION ----------------
-
     bool IsGroundAhead()
     {
         float dir = Mathf.Sign(transform.localScale.x);
@@ -240,8 +228,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
         return hit.collider != null;
     }
 
-    // ---------------- DAMAGE ----------------
-
     public void TakeDamage(int damage)
     {
         if (isDead) return;
@@ -252,7 +238,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
         }
         else
         {
-             // Multiplayer: Wait for server confirmation
              Debug.Log($"[Multiplayer] Boss took {damage} damage (Visual). Waiting for server.");
         }
     }
@@ -264,11 +249,9 @@ public class CrabBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
-        // Play Hurt Sound
         if (hurtSound != null && audioSource != null)
             audioSource.PlayOneShot(hurtSound);
 
-        // [NEW] Phase 1 score at 50% HP
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
             if (ScoreManager.Instance != null)
@@ -288,7 +271,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
         StopMoving();
         rb.simulated = false;
 
-        // [NEW] Final kill score
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(160);
 
@@ -297,7 +279,6 @@ public class CrabBoss : MonoBehaviour, IDamageable
 
         animator.SetTrigger("Death");
 
-        // Play Death Sound
         if (deathSound != null && audioSource != null)
             audioSource.PlayOneShot(deathSound);
 

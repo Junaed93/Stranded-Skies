@@ -20,7 +20,7 @@ public class GolemSpawner : MonoBehaviour
     public float minDistanceBetweenGolems = 3f;
     public float verticalOffset = 0.1f;
     public float initialSpawnDelay = 1f;
-    public float respawnDelay = 3f; // Delay before respawning after death
+    public float respawnDelay = 3f;
 
     List<GameObject> activeGolems = new List<GameObject>();
     List<Collider2D> groundColliders = new List<Collider2D>();
@@ -39,7 +39,6 @@ public class GolemSpawner : MonoBehaviour
 
     void Update()
     {
-        // Check for dead golems and respawn them
         CheckAndRespawnDeadGolems();
     }
 
@@ -56,7 +55,7 @@ public class GolemSpawner : MonoBehaviour
         }
 
         if (groundColliders.Count == 0)
-            Debug.LogError("❌ No ground colliders found with tag: " + groundTag);
+            Debug.LogError("No ground colliders found with tag: " + groundTag);
     }
 
     IEnumerator InitialSpawn()
@@ -67,13 +66,11 @@ public class GolemSpawner : MonoBehaviour
 
     void CheckAndRespawnDeadGolems()
     {
-        // Remove null (destroyed) golems from list
         for (int i = activeGolems.Count - 1; i >= 0; i--)
         {
             if (activeGolems[i] == null)
             {
                 activeGolems.RemoveAt(i);
-                // Respawn a new golem at a random position after delay
                 StartCoroutine(RespawnAfterDelay());
             }
         }
@@ -119,7 +116,6 @@ public class GolemSpawner : MonoBehaviour
                 b.max.y + verticalOffset
             );
 
-            // Check distance from currently alive golems only
             if (IsTooCloseToActiveGolems(spawnPos)) continue;
 
             GameObject newGolem = Instantiate(golemPrefab, spawnPos, Quaternion.identity);

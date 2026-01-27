@@ -5,7 +5,7 @@ public class BossHealthUI : MonoBehaviour
 {
     public static BossHealthUI Instance;
 
-    public Slider healthBar; // The Slider component
+    public Slider healthBar;
 
     private float hideTimer = 0f;
     private bool isVisible = false;
@@ -22,15 +22,14 @@ public class BossHealthUI : MonoBehaviour
 
     void Start()
     {
-        // Ensure the bar starts hidden
+    void Start()
+    {
         if (healthBar != null) 
             healthBar.gameObject.SetActive(false);
     }
 
     void Update()
     {
-        // Auto-hide logic: If no report received for 0.1s, hide it.
-        // This is more robust than LateUpdate frame-perfect logic for some setups.
         if (isVisible)
         {
             hideTimer += Time.deltaTime;
@@ -43,7 +42,6 @@ public class BossHealthUI : MonoBehaviour
 
     public void ReportProximity(MonoBehaviour boss, float distance, int currentHealth, int maxHealth)
     {
-        // Reset hide timer because a boss is claiming usage
         hideTimer = 0f;
         
         Show();

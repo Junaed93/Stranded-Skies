@@ -3,8 +3,8 @@ using UnityEngine;
 public class AutoCheckpoint : MonoBehaviour
 {
     [Header("Settings")]
-    public float saveInterval = 3.0f; // [USER REQUESTED] 3 second interval
-    public LayerMask groundLayer = ~0; // Default to all layers
+    public float saveInterval = 3.0f;
+    public LayerMask groundLayer = ~0;
 
     private Vector3 lastSafePosition;
     private float saveTimer;
@@ -36,14 +36,10 @@ public class AutoCheckpoint : MonoBehaviour
 
     bool IsSafe()
     {
-        // 1. Check if we are physically grounded
         bool isGrounded = IsGrounded();
-        
-        // 2. Check vertical velocity (ensure we aren't falling or jumping significantly)
-        // Using 0.05f threshold for better precision
+
         bool isStable = rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.05f;
 
-        // 3. Ensure we aren't at a dangerously low Y (approaching fall threshold)
         bool aboveVoid = transform.position.y > -5f;
 
         return isGrounded && isStable && aboveVoid;
@@ -53,7 +49,6 @@ public class AutoCheckpoint : MonoBehaviour
     {
         if (col == null) return false;
 
-        // Raycast from bottom
         float extraHeight = 0.2f;
         RaycastHit2D hit = Physics2D.BoxCast(col.bounds.center, col.bounds.size * 0.9f, 0f, Vector2.down, extraHeight, groundLayer);
         
@@ -65,7 +60,6 @@ public class AutoCheckpoint : MonoBehaviour
         return lastSafePosition;
     }
 
-    // Visualization for debugging
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;

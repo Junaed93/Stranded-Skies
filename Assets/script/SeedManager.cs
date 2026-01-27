@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// SeedManager.cs
-/// Generates and stores an integer seed for deterministic world generation.
-/// Used ONLY in Multiplayer.scene for procedural content.
-/// </summary>
 public class SeedManager : MonoBehaviour
 {
     public static SeedManager Instance { get; private set; }
@@ -16,9 +11,6 @@ public class SeedManager : MonoBehaviour
     [Tooltip("If true, generates a random seed on Start if seed is 0")]
     public bool autoGenerateSeed = true;
 
-    /// <summary>
-    /// The active Random.State initialized with the seed.
-    /// </summary>
     public System.Random SeededRandom { get; private set; }
 
     void Awake()
@@ -36,9 +28,6 @@ public class SeedManager : MonoBehaviour
         InitializeSeed();
     }
 
-    /// <summary>
-    /// Initializes the seed. If seed is 0 and autoGenerateSeed is true, generates a random seed.
-    /// </summary>
     public void InitializeSeed()
     {
         if (seed == 0 && autoGenerateSeed)
@@ -50,10 +39,6 @@ public class SeedManager : MonoBehaviour
         Debug.Log($"[SeedManager] World seed initialized: {seed}");
     }
 
-    /// <summary>
-    /// Sets a specific seed and reinitializes the random generator.
-    /// </summary>
-    /// <param name="newSeed">The new seed value</param>
     public void SetSeed(int newSeed)
     {
         seed = newSeed;
@@ -61,33 +46,21 @@ public class SeedManager : MonoBehaviour
         Debug.Log($"[SeedManager] Seed changed to: {seed}");
     }
 
-    /// <summary>
-    /// Returns a deterministic random integer.
-    /// </summary>
     public int NextInt()
     {
         return SeededRandom.Next();
     }
 
-    /// <summary>
-    /// Returns a deterministic random integer within a range.
-    /// </summary>
     public int NextInt(int min, int max)
     {
         return SeededRandom.Next(min, max);
     }
 
-    /// <summary>
-    /// Returns a deterministic random float between 0 and 1.
-    /// </summary>
     public float NextFloat()
     {
         return (float)SeededRandom.NextDouble();
     }
 
-    /// <summary>
-    /// Returns a deterministic random float within a range.
-    /// </summary>
     public float NextFloat(float min, float max)
     {
         return min + (max - min) * NextFloat();

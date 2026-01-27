@@ -16,7 +16,6 @@ public class MultiplayerBootstrap : MonoBehaviour
             WorldGenerator.Instance.InitializeWorld(forcedSeed);
             Debug.Log("[MultiplayerBootstrap] World initialized");
             
-            // Enable Enemy Spawning
             if (EnemySpawner.Instance != null)
             {
                 EnemySpawner.Instance.EnableSpawning(true);

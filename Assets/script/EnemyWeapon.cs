@@ -8,7 +8,8 @@ public class EnemyWeapon : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            // Use PlayerCombat for damage so blocking works
+        if (collision.CompareTag("Player"))
+        {
             PlayerCombat playerCombat = collision.GetComponent<PlayerCombat>();
             if (playerCombat != null)
             {

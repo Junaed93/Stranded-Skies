@@ -8,7 +8,7 @@ public class CameraFollow : MonoBehaviour
 
     [Header("Borders")]
     public bool enableLimits = true;
-    public float minY = 4.5f; // [FIXED] Higher value keeps camera ABOVE the floor
+    public float minY = 4.5f;
     public float maxY = 20f;
 
     [Header("Dynamic Zoom")]
@@ -27,11 +27,10 @@ public class CameraFollow : MonoBehaviour
         Debug.Log("[CameraFollow] Started - waiting for player");
     }
 
-    private Vector3 velocity = Vector3.zero; // For SmoothDamp
+    private Vector3 velocity = Vector3.zero;
 
     void FixedUpdate()
     {
-        // Auto-find player if not assigned
         if (target == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -43,7 +42,6 @@ public class CameraFollow : MonoBehaviour
             return;
         }
 
-        // Follow the target
         Vector3 targetPosition = target.position + offset;
         
         if (enableLimits)
@@ -53,10 +51,8 @@ public class CameraFollow : MonoBehaviour
 
         targetPosition.z = -10; 
         
-        // Use SmoothDamp instead of Lerp for jitter-free movement
         transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothSpeed);
 
-        // 2. Dynamic Zoom
         HandleZoom();
     }
 
@@ -65,16 +61,13 @@ public class CameraFollow : MonoBehaviour
     {
         if (cam == null) return;
 
-        // Check if any enemy is nearby
         Collider2D enemy = Physics2D.OverlapCircle(target.position, enemyDetectionRadius, enemyLayer);
         
         float targetSize = (enemy != null) ? zoomSize : normalSize;
         
-        // Smoothly change the camera size
         cam.orthographicSize = Mathf.Lerp(cam.orthographicSize, targetSize, Time.deltaTime * zoomSpeed);
     }
 
-    // DEBUG: See the zoom detection range in Editor
     void OnDrawGizmosSelected()
     {
         if (target != null)

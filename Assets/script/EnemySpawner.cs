@@ -1,11 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// EnemySpawner.cs
-/// Randomly spawns enemies based on seed and player position.
-/// Used ONLY in Multiplayer.scene.
-/// </summary>
 public class EnemySpawner : MonoBehaviour
 {
     public static EnemySpawner Instance { get; private set; }
@@ -46,7 +41,6 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Parent transform for spawned enemies")]
     public Transform enemiesParent;
 
-    // Tracking
     private float nextSpawnTime;
     private List<GameObject> activeEnemies = new List<GameObject>();
 
@@ -67,16 +61,12 @@ public class EnemySpawner : MonoBehaviour
         spawningEnabled = enable;
         Debug.Log($"[EnemySpawner] Spawning Enabled: {enable}");
         
-        // Reset timers
         if (enable) nextSpawnTime = Time.time + spawnInterval;
     }
 
     void Start()
     {
-        // NOTE: In Multiplayer, we start disabled.
-        // Bootstrap calls EnableSpawning(true).
         
-        // Auto-fix layers (keep this)
         if (groundLayer == 0)
         {
             groundLayer = LayerMask.GetMask("Ground", "Default");
@@ -89,9 +79,6 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log("[EnemySpawner] Initialized (Waiting for Enable)");
     }
 
-    /// <summary>
-    /// Explicitly set the player target.
-    /// </summary>
     public void SetTarget(Transform playerTransform)
     {
         target = playerTransform;
@@ -100,7 +87,6 @@ public class EnemySpawner : MonoBehaviour
 
     void Update()
     {
-        // Fallback search if target is still null
         if (target == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -118,43 +104,27 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
-        // Clean up destroyed enemies
         activeEnemies.RemoveAll(e => e == null);
 
-        // Spawn if conditions are met
-        /* DISABLED TIME-BASED SPAWNING - Now controlled by WorldGenerator only
-        if (Time.time >= nextSpawnTime && activeEnemies.Count < maxEnemies)
-        {
-            SpawnEnemy();
-            nextSpawnTime = Time.time + spawnInterval;
-        }
-        */
+        
     }
 
-    /// <summary>
-    /// Spawns an enemy at a random position around the player.
-    /// </summary>
     void SpawnEnemy()
     {
-        // Pick a random enemy type
         int enemyIndex = Random.Range(0, enemyPrefabs.Length);
         GameObject prefab = enemyPrefabs[enemyIndex];
 
-        // Try multiple spawn attempts to find valid connected ground
         int maxAttempts = 10;
         for (int attempt = 0; attempt < maxAttempts; attempt++)
         {
-            // Calculate spawn X position
             float distance = Random.Range(minSpawnDistance, maxSpawnDistance);
             float direction = Random.value > 0.5f ? 1f : -1f;
             float spawnX = target.position.x + (distance * direction);
 
-            // Check if spawn position has valid connected ground
             Vector3? validSpawnPos = FindValidSpawnPosition(spawnX);
             
             if (validSpawnPos.HasValue)
             {
-                // Instantiate enemy
                 GameObject enemy = Instantiate(prefab, validSpawnPos.Value, Quaternion.identity, enemiesParent);
                 enemy.name = $"Enemy_{activeEnemies.Count}";
                 activeEnemies.Add(enemy);
@@ -167,20 +137,13 @@ public class EnemySpawner : MonoBehaviour
         Debug.LogWarning("[EnemySpawner] Could not find valid spawn position after max attempts");
     }
 
-    /// <summary>
-    /// Finds a valid spawn position by checking ground connectivity.
-    /// Returns null if no valid position found.
-    /// </summary>
     Vector3? FindValidSpawnPosition(float spawnX)
     {
-        // 1. Check if Player is on ground
         Vector2 playerRayStart = new Vector2(target.position.x, target.position.y);
         
-        // Debug check: Try to hit ANYTHING below player
         RaycastHit2D hitCheck = Physics2D.Raycast(playerRayStart, Vector2.down, 10f);
         if (hitCheck.collider != null)
         {
-             // Debug.Log($"[EnemySpawner] Player is standing above: {hitCheck.collider.name} (Layer: {LayerMask.LayerToName(hitCheck.collider.gameObject.layer)})");
         }
         else
         {
@@ -188,34 +151,26 @@ public class EnemySpawner : MonoBehaviour
              return null;
         }
 
-        // Use the hit point as the ground reference
         float playerGroundY = hitCheck.point.y;
         
-        // 2. Check Spawn Point
         Vector2 spawnRayStart = new Vector2(spawnX, raycastStartHeight);
         RaycastHit2D spawnHit = Physics2D.Raycast(spawnRayStart, Vector2.down, maxRaycastDistance, groundLayer);
         
-        // If strict ground check fails, try ALL layers
         if (spawnHit.collider == null)
         {
             spawnHit = Physics2D.Raycast(spawnRayStart, Vector2.down, maxRaycastDistance);
         }
 
-        if (spawnHit.collider == null) return null; // Still nothing? Give up.
+        if (spawnHit.collider == null) return null;
         
         float spawnGroundLevel = spawnHit.point.y;
         
-        // 3. Height Tolerance Check
         if (Mathf.Abs(spawnGroundLevel - playerGroundY) > 3f) return null;
 
         return new Vector3(spawnX, spawnGroundLevel + 0.5f, 0);
     }
 
 
-    /// <summary>
-    /// Tries to spawn an enemy on a newly generated platform.
-    /// Called directly by WorldGenerator.
-    /// </summary>
     public void TrySpawnEnemy(Vector3 position, int platformWidth)
     {
         if (enemyPrefabs == null || enemyPrefabs.Length == 0)
@@ -252,17 +207,11 @@ public class EnemySpawner : MonoBehaviour
         Debug.Log($"[EnemySpawner] SUCCESS: Spawned {prefab.name} at {position}. Active count: {activeEnemies.Count}");
     }
 
-    /// <summary>
-    /// Called when an enemy is killed. Updates tracking.
-    /// </summary>
     public void OnEnemyKilled(GameObject enemy)
     {
         activeEnemies.Remove(enemy);
     }
 
-    /// <summary>
-    /// Returns the current number of active enemies.
-    /// </summary>
     public int GetActiveEnemyCount()
     {
         activeEnemies.RemoveAll(e => e == null);

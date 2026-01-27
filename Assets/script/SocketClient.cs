@@ -15,15 +15,14 @@ public class SocketClient : MonoBehaviour
     public string serverUrl = "ws://localhost:8080/game";
 
     [Header("References")]
-    public GameObject remotePlayerPrefab; // ASSIGN IN INSPECTOR
+    public GameObject remotePlayerPrefab;
 
     private ClientWebSocket _ws;
     private CancellationTokenSource _cts;
     
-    // Remote Players Map: ID -> Controller
+
     private Dictionary<string, RemotePlayerController> remotePlayers = new Dictionary<string, RemotePlayerController>();
 
-    // Main Thread Queue
     private Queue<string> messageQueue = new Queue<string>();
 
     void Awake()
@@ -58,10 +57,9 @@ public class SocketClient : MonoBehaviour
             await _ws.ConnectAsync(new Uri(serverUrl), _cts.Token);
             Debug.Log("[SocketClient] Connected!");
             
-            // Start Receiving
+
             ReceiveLoop();
             
-            // Send Join
             SendJson(new { type = "JOIN" });
         }
         catch (Exception e)
@@ -96,9 +94,8 @@ public class SocketClient : MonoBehaviour
         }
     }
 
-    void Update()
+
     {
-        // Process Main Thread Queue
         lock (messageQueue)
         {
             while (messageQueue.Count > 0)
@@ -154,7 +151,8 @@ public class SocketClient : MonoBehaviour
         
         GameObject go = Instantiate(remotePlayerPrefab, new Vector3(x, y, 0), Quaternion.identity);
         go.name = "RemotePlayer_" + id;
-        RemotePlayerController rpc = go.AddComponent<RemotePlayerController>(); // Ensure component exists
+
+        RemotePlayerController rpc = go.AddComponent<RemotePlayerController>();
         rpc.playerId = id;
         
         remotePlayers.Add(id, rpc);
@@ -175,10 +173,9 @@ public class SocketClient : MonoBehaviour
     {
         if (_ws == null || _ws.State != WebSocketState.Open) return;
 
-        string json = JsonUtility.ToJson(data); // Simple Unity JSON
-        // Note: For anonymous objects, JsonUtility needs a wrapper or manual string construction.
-        // For simplicity in this demo, assumes 'data' is a proper serializable class.
-        // If sending raw string:
+        if (_ws == null || _ws.State != WebSocketState.Open) return;
+
+        string json = JsonUtility.ToJson(data);
         
         // Quick Fix for Anonymous 'JOIN'
         if (json == "{}") json = "{\"type\":\"JOIN\"}"; 
@@ -187,10 +184,8 @@ public class SocketClient : MonoBehaviour
         await _ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
     }
     
-    // Explicit Move Send
     public void SendMove(float x, float y, float velX, bool grounded)
     {
-        // Manual JSON construction for speed/simplicity without extensive DTOs
         string json = $"{{\"type\":\"MOVE\",\"x\":{x},\"y\":{y},\"velX\":{velX},\"grounded\":{(grounded?"true":"false")}}}";
         SendString(json);
     }

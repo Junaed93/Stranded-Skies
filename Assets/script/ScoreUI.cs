@@ -1,4 +1,4 @@
-using TMPro; // Ensure you have TextMeshPro installed
+using TMPro;
 using UnityEngine;
 
 public class ScoreUI : MonoBehaviour
@@ -8,7 +8,8 @@ public class ScoreUI : MonoBehaviour
 
     void Start()
     {
-        // Subscribe in Start to ensure ScoreManager.Instance is ready
+    void Start()
+    {
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.OnScoreChanged += UpdateScoreDisplay;

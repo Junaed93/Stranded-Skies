@@ -26,10 +26,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
     public float moveSpeed = 2f;
 
     [Header("Attack")]
-    public float attackRange = 2.5f;   // Kept slightly larger for Golem
+    public float attackRange = 2.5f;
     public float attackCooldown = 2.5f;
     public int attackDamage = 35;
-    public float attackHitRange = 3f;  // Kept slightly larger for Golem
+    public float attackHitRange = 3f;
 
     [Header("Edge Detection")]
     public float groundCheckDistance = 2f;
@@ -44,11 +44,10 @@ public class GolemBoss : MonoBehaviour, IDamageable
 
     void Start()
     {
-        // In Multiplayer: All bosses have 500 HP and no boss walls
         if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
         {
             maxHealth = 500;
-            bossWall = null; // No boss walls in multiplayer
+            bossWall = null;
         }
 
         currentHealth = maxHealth;
@@ -71,7 +70,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
     {
         if (isDead) return;
         
-        // Continuously search for player if not found
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -88,7 +86,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
             return;
         }
 
-        // [NEW] Report Proximity to Boss UI
         if (BossHealthUI.Instance != null)
         {
             BossHealthUI.Instance.ReportProximity(this, distance, currentHealth, maxHealth);
@@ -126,8 +123,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(moveDir * moveSpeed, rb.linearVelocity.y);
     }
 
-    // ---------------- ATTACK ----------------
-
     void StartAttack()
     {
         isAttacking = true;
@@ -137,14 +132,13 @@ public class GolemBoss : MonoBehaviour, IDamageable
         animator.SetBool("Run", false);
         animator.SetTrigger("Attack");
 
-        // Play Random Attack Sound
         if (attackSounds.Length > 0 && audioSource != null)
         {
             AudioClip clip = attackSounds[Random.Range(0, attackSounds.Length)];
             audioSource.PlayOneShot(clip);
         }
 
-        Invoke(nameof(EndAttack), 1.5f); // Matches Golem's longer animation
+        Invoke(nameof(EndAttack), 1.5f);
     }
 
     void HandleAttackDamage()
@@ -166,8 +160,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
             }
             else
             {
-                // Multiplayer: Request damage from server
-                // PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
                 hasDealtDamage = true;
                 Debug.Log("Golem attack intent sent in Multiplayer");
             }
@@ -178,8 +170,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
     {
         isAttacking = false;
     }
-
-    // ---------------- MOVEMENT ----------------
 
     void MoveTowardsPlayer()
     {
@@ -219,8 +209,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
         return facing == toPlayer;
     }
 
-    // ---------------- EDGE DETECTION ----------------
-
     bool IsGroundAhead()
     {
         float dir = Mathf.Sign(transform.localScale.x);
@@ -241,8 +229,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
         return hit.collider != null;
     }
 
-    // ---------------- DAMAGE ----------------
-
     public void TakeDamage(int damage)
     {
         if (isDead) return;
@@ -250,11 +236,9 @@ public class GolemBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
-        // Play Hurt Sound
         if (hurtSound != null && audioSource != null)
             audioSource.PlayOneShot(hurtSound);
 
-        // [NEW] Phase 1 score at 50% HP (Golem: 100 pts)
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
             if (ScoreManager.Instance != null)
@@ -274,7 +258,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
         StopMoving();
         rb.simulated = false;
 
-        // [NEW] Final kill score (Golem: 400 pts)
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(400);
 
@@ -283,7 +266,6 @@ public class GolemBoss : MonoBehaviour, IDamageable
 
         animator.SetTrigger("Death");
 
-        // Play Death Sound
         if (deathSound != null && audioSource != null)
             audioSource.PlayOneShot(deathSound);
 

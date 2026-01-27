@@ -16,7 +16,6 @@ public class EnemyAttack : MonoBehaviour
 
     public void DoAttack()
     {
-        // 🔹 Play animation if exists
         if (anim) anim.SetTrigger("Attack");
 
         Collider2D hit = Physics2D.OverlapCircle(
@@ -27,7 +26,6 @@ public class EnemyAttack : MonoBehaviour
 
         if (hit)
         {
-            // Use PlayerCombat for damage so blocking works
             PlayerCombat playerCombat = hit.GetComponent<PlayerCombat>();
             if (playerCombat != null)
             {

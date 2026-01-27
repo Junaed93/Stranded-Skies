@@ -40,15 +40,14 @@ public class SkullBoss : MonoBehaviour, IDamageable
     bool isAttacking;
     bool hasDealtDamage;
     float moveDir;
-    bool phaseScoreGiven = false; // [NEW]
+    bool phaseScoreGiven = false;
 
     void Start()
     {
-        // In Multiplayer: All bosses have 500 HP and no boss walls
         if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
         {
             maxHealth = 500;
-            bossWall = null; // No boss walls in multiplayer
+            bossWall = null;
         }
 
         currentHealth = maxHealth;
@@ -71,7 +70,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
     {
         if (isDead) return;
         
-        // Continuously search for player if not found
         if (player == null)
         {
             GameObject p = GameObject.FindGameObjectWithTag("Player");
@@ -82,23 +80,19 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         float distance = Vector2.Distance(transform.position, player.position);
 
-        // ❌ Player too far → idle
         if (distance > detectRange)
         {
             StopMoving();
             return;
         }
 
-        // [NEW] Report Proximity to Boss UI
         if (BossHealthUI.Instance != null)
         {
             BossHealthUI.Instance.ReportProximity(this, distance, currentHealth, maxHealth);
         }
 
-        // ✅ ALWAYS face player when detected
         FacePlayer();
 
-        // ❌ Do nothing if attacking
         if (isAttacking)
         {
             HandleAttackDamage();
@@ -106,8 +100,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
             return;
         }
 
-        // ❌ Player must be in front to move/attack
-        // DISABLED CHECK: Assume boss can turn instantly or attack anyway
         /*
         if (!IsPlayerInFront())
         {
@@ -116,7 +108,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         }
         */
 
-        // ✅ Attack
         if (distance <= attackRange && Time.time >= lastAttackTime + attackCooldown)
         {
             StartAttack();
@@ -134,8 +125,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         rb.linearVelocity = new Vector2(moveDir * moveSpeed, rb.linearVelocity.y);
     }
 
-    // ---------------- ATTACK (NO EVENTS) ----------------
-
     void StartAttack()
     {
         Debug.Log($"[SkullBoss] Attacking Player! (Time: {Time.time})");
@@ -146,7 +135,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         animator.SetBool("Run", false);
         animator.SetTrigger("Attack");
 
-        // Play Random Attack Sound
         if (attackSounds.Length > 0 && audioSource != null)
         {
             AudioClip clip = attackSounds[Random.Range(0, attackSounds.Length)];
@@ -174,8 +162,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
             }
             else
             {
-                // Multiplayer: Request damage from server
-                // PlayerNetworkSender.RequestDamage(player.gameObject, attackDamage);
                 hasDealtDamage = true;
             }
         }
@@ -185,8 +171,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
     {
         isAttacking = false;
     }
-
-    // ---------------- MOVEMENT ----------------
 
     void MoveTowardsPlayer()
     {
@@ -226,10 +210,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         return facing == toPlayer;
     }
 
-    // ---------------- EDGE DETECTION ----------------
-
-    // ---------------- EDGE DETECTION ----------------
-    
     bool IsGroundAhead()
     {
         // Platformer Logic: Even if there is a gap, try to move if Player is close?
@@ -260,8 +240,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         return hit.collider != null;
     }
 
-    // ---------------- DAMAGE ----------------
-
     public void TakeDamage(int damage)
     {
         if (isDead) return;
@@ -269,11 +247,9 @@ public class SkullBoss : MonoBehaviour, IDamageable
         currentHealth -= damage;
         animator.SetTrigger("Hit");
 
-        // Play Hurt Sound
         if (hurtSound != null && audioSource != null)
             audioSource.PlayOneShot(hurtSound);
 
-        // [NEW] Phase 1 score at 50% HP
         if (!phaseScoreGiven && currentHealth <= maxHealth / 2)
         {
             if (ScoreManager.Instance != null)
@@ -293,7 +269,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
         StopMoving();
         rb.simulated = false;
 
-        // [NEW] Final kill score
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(80);
 
@@ -302,7 +277,6 @@ public class SkullBoss : MonoBehaviour, IDamageable
 
         animator.SetTrigger("Death");
 
-        // Play Death Sound
         if (deathSound != null && audioSource != null)
             audioSource.PlayOneShot(deathSound);
 

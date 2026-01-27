@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Controls a remote player instance.
-/// Receives position/anim updates from SocketClient and interpolates them.
-/// </summary>
 public class RemotePlayerController : MonoBehaviour
 {
     public string playerId;
@@ -12,7 +8,6 @@ public class RemotePlayerController : MonoBehaviour
     private Animator anim;
     private SpriteRenderer sr;
     
-    // Interpolation settings
     private float smoothTime = 0.1f;
     private Vector3 velocity;
 
@@ -20,7 +15,6 @@ public class RemotePlayerController : MonoBehaviour
     {
         anim = GetComponent<Animator>();
         sr = GetComponentInChildren<SpriteRenderer>();
-        // Ensure Physics don't interfere
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb) rb.bodyType = RigidbodyType2D.Kinematic;
         
@@ -31,14 +25,12 @@ public class RemotePlayerController : MonoBehaviour
     {
         targetPosition = new Vector3(x, y, 0);
 
-        // Update Animation
         if (anim)
         {
             anim.SetFloat("Speed", Mathf.Abs(velX));
             anim.SetBool("Grounded", isGrounded);
         }
 
-        // Update Facing
         if (velX > 0.1f) Flip(false);
         else if (velX < -0.1f) Flip(true);
     }
@@ -50,7 +42,6 @@ public class RemotePlayerController : MonoBehaviour
 
     void Update()
     {
-        // Smoothly move to target
         transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
     }
 

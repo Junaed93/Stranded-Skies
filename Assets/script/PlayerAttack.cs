@@ -24,7 +24,6 @@ public class PlayerAttack : MonoBehaviour
 
     void Attack()
     {
-        // 🔹 Play animation if exists
         if (anim) anim.SetTrigger("Attack1");
 
         Collider2D hit = Physics2D.OverlapCircle(

@@ -11,7 +11,8 @@ public class BackgroundMusic : MonoBehaviour
 
     void Awake()
     {
-        // Singleton
+    void Awake()
+    {
         if (Instance != null)
         {
             Destroy(gameObject);

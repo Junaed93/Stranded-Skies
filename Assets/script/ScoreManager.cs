@@ -18,7 +18,7 @@ public class ScoreManager : MonoBehaviour
         Debug.Log("ScoreManager Initialized!");
     }
 
-    public System.Action<int> OnScoreChanged; // [NEW] Event for UI update
+    public System.Action<int> OnScoreChanged;
 
     public void AddScore(int amount)
     {
@@ -28,18 +28,17 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-            // Multiplayer: Do NOT apply score locally (Normally).
-            // [DEMO FALLBACK] Apply locally
+        else
+        {
             ApplyScore(amount);
             Debug.Log($"[Multiplayer Demo] Score added: {amount}");
         }
     }
 
-    // 🌐 Centralized score application
     public void ApplyScore(int amount)
     {
         score += amount;
-        OnScoreChanged?.Invoke(score); // [NEW] Notify UI
+        OnScoreChanged?.Invoke(score);
         Debug.Log($"Score Added: {amount} | Total Score: {score}");
     }
 

@@ -12,25 +12,28 @@ public class CombatSystem : MonoBehaviour
 
     void Start()
     {
-        // [Multiplayer] In a real implementation, we would listen to NetworkManager events here.
+    void Start()
+    {
+    }
     }
 
     public void RequestDamage(GameObject target, int amount)
     {
         if (GameSession.Instance.mode == GameMode.Multiplayer)
         {
-            // Multiplayer: Request damage from server
-            // NetworkManager.Instance.SendDamageRequest(target.name, amount);
+        if (GameSession.Instance.mode == GameMode.Multiplayer)
+        {
             Debug.Log($"[CombatSystem] Requested {amount} damage on {target.name} (Waiting for Server)");
         }
         else
         {
-            // Singleplayer: Immediate
+        else
+        {
             ApplyDamageToTarget(target, amount);
+        }
         }
     }
 
-    // Callback from Server (to be called by NetworkManager)
     public void ApplyDamageLocally(GameObject target, int amount)
     {
         ApplyDamageToTarget(target, amount);

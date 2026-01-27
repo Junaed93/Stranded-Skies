@@ -15,12 +15,12 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
     [Header("Survival Settings")]
     public int maxRespawns = 3;
-    public float minHeight = -20f; // Fall threshold
+    public float minHeight = -20f;
     private int currentRespawns;
 
     [Header("Heal/Regen Settings")]
-    public float regenRate = 5f; // HP per second
-    public float regenDelay = 3f; // Seconds after damage before regen starts
+    public float regenRate = 5f;
+    public float regenDelay = 3f;
     private float lastDamageTime;
     private float regenAccumulator;
 
@@ -46,24 +46,22 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
     private bool facingRight = true;
 
-    // 🔒 Block (TRIGGER – ONE HIT)
     private bool isBlocking = false;
 
     private Vector3 attackPointStartLocalPos;
-    private AutoCheckpoint autoCheckpoint; // [NEW]
+    private AutoCheckpoint autoCheckpoint;
 
     void Start()
     {
         currentHealth = maxHealth;
-        currentRespawns = maxRespawns; // [NEW] Init lives
+        currentRespawns = maxRespawns;
 
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (!audioSource) audioSource = GetComponent<AudioSource>();
 
         attackPointStartLocalPos = attackPoint.localPosition;
-        autoCheckpoint = GetComponent<AutoCheckpoint>(); // [NEW]
+        autoCheckpoint = GetComponent<AutoCheckpoint>();
 
-        // [NEW] Initial UI Update
         if (PlayerHealthUI.Instance != null)
             PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
     }
@@ -72,15 +70,13 @@ public class PlayerCombat : MonoBehaviour, IDamageable
     {
         if (isDead) return;
 
-        // [NEW] Fall Check
         if (transform.position.y < minHeight)
         {
-            Die(); // Call Die directly for falls
+            Die();
         }
 
         HandleRegeneration();
 
-        // [NEW] Manual Heal (Press H)
         if (Input.GetKeyDown(KeyCode.H))
         {
             Heal(20);
@@ -88,11 +84,10 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
         HandleFacingDirection();
 
-        // 🛡️ BLOCK (RIGHT CLICK – HOLD)
         if (Input.GetMouseButtonDown(1))
         {
             isBlocking = true;
-            animator.SetBool("IdleBlock", true); // Trigger looping block animation
+            animator.SetBool("IdleBlock", true);
             animator.SetTrigger("Block");
             PlaySound(blockSFX);
         }
@@ -103,18 +98,14 @@ public class PlayerCombat : MonoBehaviour, IDamageable
             animator.SetBool("IdleBlock", false);
         }
 
-        // Prevent attacking while blocking
         bool blockHeld = Input.GetMouseButton(1);
         isBlocking = blockHeld;
 
-        // ⚔️ ATTACK
         if (Input.GetButtonDown("Fire1") && !isAttacking && !isBlocking)
         {
             StartCombo();
         }
     }
-
-    // ---------------- FACING ----------------
 
     void HandleFacingDirection()
     {
@@ -138,8 +129,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         attackPoint.localPosition = pos;
     }
 
-    // ---------------- ATTACK ----------------
-
     void StartCombo()
     {
         comboIndex++;
@@ -151,15 +140,12 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
         PlaySound(swordSwingSFX);
         
-        // [FIX] Auto-trigger detection in case Animation Event is missing
         Invoke(nameof(DealDamage), 0.3f); 
         Invoke(nameof(EndAttack), 0.8f);
     }
 
-    // 🔥 ANIMATION EVENT (HIT FRAME) - Now also called by Invoke
     public void DealDamage()
     {
-        // Auto-Fix LayerMask: If it's 0 (Nothing) or 1 (Default), just hit EVERYTHING
         int mask = enemyLayers;
         if (mask <= 1) mask = ~0; 
 
@@ -171,12 +157,10 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
         foreach (Collider2D enemy in hitEnemies)
         {
-             // Don't hit yourself
              if (enemy.gameObject == gameObject) continue;
 
              if (GameSession.Instance.mode == GameMode.SinglePlayer)
              {
-                 // Singleplayer: Immediate Authority
                  if (enemy.TryGetComponent(out IDamageable damageable))
                  {
                      damageable.TakeDamage(attackDamage);
@@ -186,8 +170,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
              }
              else
              {
-                 // Multiplayer: Intent Only
-                 // [DEMO FALLBACK] Apply damage immediately if no network system exists
                  if (enemy.TryGetComponent(out IDamageable damageable))
                  {
                      damageable.TakeDamage(attackDamage);
@@ -198,12 +180,12 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         }
     }
 
-    // 🔚 ANIMATION EVENT (END FRAME)
     public void EndAttack()
     {
         isAttacking = false;
         
-        // Only reset block if not still holding the button
+        isAttacking = false;
+        
         if (!Input.GetMouseButton(1))
             isBlocking = false; 
 
@@ -211,17 +193,14 @@ public class PlayerCombat : MonoBehaviour, IDamageable
             comboIndex = 0;
     }
 
-    // ---------------- PLAYER DAMAGE + BLOCK ----------------
-
     public void TakeDamage(int damage)
     {
         if (isDead) return;
 
-        // 🛡️ BLOCK NEGATES DAMAGE
         if (isBlocking)
         {
-            animator.SetTrigger("Block"); // Play block impact
-            return; // ❌ no damage
+            animator.SetTrigger("Block");
+            return;
         }
 
         if (GameSession.Instance.mode == GameMode.SinglePlayer)
@@ -230,22 +209,18 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         }
         else
         {
-            // Multiplayer: Intent only, actual damage applied via NetworkApplyDamage (stub)
-            // [DEMO FALLBACK] Apply locally
             ApplyDamage(damage);
             Debug.Log("[Multiplayer Demo] Player health applied locally.");
         }
     }
 
-    // 🌐 Entry point for multiplayer damage confirmation or singleplayer application
     public void ApplyDamage(int damage)
     {
         currentHealth -= damage;
         animator.SetTrigger("Hurt");
         PlaySound(hurtSFX);
-        lastDamageTime = Time.time; // [NEW] Reset regen timer
+        lastDamageTime = Time.time;
 
-        // [NEW] UI Update
         if (PlayerHealthUI.Instance != null)
             PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
 
@@ -258,13 +233,12 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         if (isDead) return;
         isDead = true;
 
-        lastDamageTime = 0; // Stop regen on death
+        lastDamageTime = 0;
 
-        animator.SetBool("IsDead", true); // [NEW] Keep in death state
+        animator.SetBool("IsDead", true);
         animator.SetTrigger("Death");
-        PlaySound(deathSFX);
 
-        // Disable controls
+
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
         foreach (MonoBehaviour script in scripts)
         {
@@ -279,7 +253,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
             rb.bodyType = RigidbodyType2D.Static;
         }
 
-        // [NEW] Trigger auto-respawn IF lives remain
         if (currentRespawns > 0)
         {
             currentRespawns--;
@@ -290,14 +263,12 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         {
             Debug.Log("Game Over - No respawns left.");
 
-            // [NEW] Trigger Backend Report
             if (ScoreReporter.Instance != null)
             {
                 ScoreReporter.Instance.ReportGameOver();
             }
             else
             {
-                // Create a temporary reporter if one doesn't exist (failsafe)
                 GameObject go = new GameObject("TemporaryScoreReporter");
                 ScoreReporter tempReporter = go.AddComponent<ScoreReporter>();
                 tempReporter.ReportGameOver();
@@ -316,17 +287,14 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         isDead = false;
         currentHealth = maxHealth;
 
-        // [NEW] UI Update
         if (PlayerHealthUI.Instance != null)
             PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
 
-        // Reset Animator
         animator.SetBool("IsDead", false);
-        animator.Rebind(); // [NEW] Reset all triggers and state
+        animator.Rebind();
         animator.Update(0f);
         animator.Play("Idle");
 
-        // Restore Physics & Position
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         Collider2D col = GetComponent<Collider2D>();
 
@@ -335,18 +303,15 @@ public class PlayerCombat : MonoBehaviour, IDamageable
             rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero;
             
-            // Move to last safe position BEFORE enabling scripts
-            // Move to last safe position BEFORE enabling scripts
             Vector3 respawnPos = Vector3.zero;
             if (autoCheckpoint != null)
             {
                 respawnPos = autoCheckpoint.GetLastSafePosition();
             }
 
-            // Fallback: If the saved position is below a threshold, pick 10,0,0 (start area)
             if (respawnPos.y < -5f)
             {
-                respawnPos = new Vector3(10f, 2f, 0f); // Default start area
+                respawnPos = new Vector3(10f, 2f, 0f);
                 Debug.Log("[PlayerCombat] Checkpoint was UNSAFE (falling). Respawning at start area.");
             }
 
@@ -357,10 +322,9 @@ public class PlayerCombat : MonoBehaviour, IDamageable
 
         if (col != null)
         {
-            col.enabled = true; // [NEW] Ensure collider is on
+            col.enabled = true;
         }
 
-        // Re-enable scripts (Movement, etc.)
         MonoBehaviour[] scripts = GetComponents<MonoBehaviour>();
         foreach (MonoBehaviour script in scripts)
         {
@@ -375,7 +339,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
         currentHealth += amount;
         currentHealth = Mathf.Min(currentHealth, maxHealth);
         
-        // [NEW] UI Update
         if (PlayerHealthUI.Instance != null)
             PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
 
@@ -386,7 +349,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
     {
         if (isDead || currentHealth >= maxHealth) return;
 
-        // Wait for delay after last damage
         if (Time.time - lastDamageTime >= regenDelay)
         {
             regenAccumulator += regenRate * Time.deltaTime;
@@ -397,7 +359,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
                 currentHealth = Mathf.Min(currentHealth + healAmount, maxHealth);
                 regenAccumulator -= healAmount;
 
-                // [NEW] UI Update
                 if (PlayerHealthUI.Instance != null)
                     PlayerHealthUI.Instance.UpdateHealth(currentHealth, maxHealth);
             }

@@ -24,7 +24,7 @@ public class PlatformAttach : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
-            detach = true; // delay detach
+            detach = true;
         }
     }
 

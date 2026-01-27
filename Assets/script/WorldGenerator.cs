@@ -21,9 +21,7 @@ public class WorldGenerator : MonoBehaviour
     private bool initialized;
     private bool playerRegistered;
 
-    // =========================
-    // UNITY LIFECYCLE
-    // =========================
+
 
     void Awake()
     {
@@ -58,9 +56,7 @@ public class WorldGenerator : MonoBehaviour
         }
     }
 
-    // =========================
-    // INITIALIZATION
-    // =========================
+
 
     public void InitializeWorld(int worldSeed)
     {
@@ -80,9 +76,6 @@ public class WorldGenerator : MonoBehaviour
         Debug.Log($"[WorldGenerator] Initialized with seed {seed}");
     }
 
-    /// <summary>
-    /// MUST be called by PlayerSpawner after spawning the local player
-    /// </summary>
     public void RegisterPlayer(Transform playerTransform)
     {
         if (playerRegistered) return;
@@ -90,13 +83,13 @@ public class WorldGenerator : MonoBehaviour
         playerRegistered = true;
         player = playerTransform;
 
-        // Link with EnemySpawner
+
+
         if (EnemySpawner.Instance != null)
         {
             EnemySpawner.Instance.SetTarget(player);
         }
 
-        // Force safe spawn on generated ground
         Vector3 spawnPos = new Vector3(10f, lastY + 2f, 0f);
         player.position = spawnPos;
 
@@ -107,9 +100,7 @@ public class WorldGenerator : MonoBehaviour
         Debug.Log("[WorldGenerator] Player registered");
     }
 
-    // =========================
-    // GENERATION
-    // =========================
+
 
     private void GenerateStartPlatform()
     {
@@ -126,7 +117,8 @@ public class WorldGenerator : MonoBehaviour
         int startX = lastX + gap;
         SpawnPlatform(startX, y, width);
 
-        // Try to spawn an enemy on this new platform
+
+
         if (EnemySpawner.Instance != null)
         {
             float enemyX = startX + (width / 2f);
