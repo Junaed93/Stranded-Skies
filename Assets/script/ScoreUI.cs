@@ -8,8 +8,6 @@ public class ScoreUI : MonoBehaviour
 
     void Start()
     {
-    void Start()
-    {
         if (ScoreManager.Instance != null)
         {
             ScoreManager.Instance.OnScoreChanged += UpdateScoreDisplay;

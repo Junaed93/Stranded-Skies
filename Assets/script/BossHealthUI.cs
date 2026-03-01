@@ -22,8 +22,6 @@ public class BossHealthUI : MonoBehaviour
 
     void Start()
     {
-    void Start()
-    {
         if (healthBar != null) 
             healthBar.gameObject.SetActive(false);
     }

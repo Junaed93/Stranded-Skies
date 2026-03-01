@@ -28,8 +28,6 @@ public class ScoreManager : MonoBehaviour
         }
         else
         {
-        else
-        {
             ApplyScore(amount);
             Debug.Log($"[Multiplayer Demo] Score added: {amount}");
         }

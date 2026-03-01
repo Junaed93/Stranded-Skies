@@ -8,8 +8,6 @@ public class EnemyWeapon : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-        if (collision.CompareTag("Player"))
-        {
             PlayerCombat playerCombat = collision.GetComponent<PlayerCombat>();
             if (playerCombat != null)
             {

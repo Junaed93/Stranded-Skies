@@ -12,25 +12,17 @@ public class CombatSystem : MonoBehaviour
 
     void Start()
     {
-    void Start()
-    {
-    }
     }
 
     public void RequestDamage(GameObject target, int amount)
     {
         if (GameSession.Instance.mode == GameMode.Multiplayer)
         {
-        if (GameSession.Instance.mode == GameMode.Multiplayer)
-        {
             Debug.Log($"[CombatSystem] Requested {amount} damage on {target.name} (Waiting for Server)");
         }
         else
         {
-        else
-        {
             ApplyDamageToTarget(target, amount);
-        }
         }
     }
 

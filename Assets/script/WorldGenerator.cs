@@ -40,8 +40,19 @@ public class WorldGenerator : MonoBehaviour
 
     void Start()
     {
-        if (seed == 0)
-            seed = System.DateTime.Now.Millisecond + Random.Range(0, 99999);
+        // In multiplayer: use a shared seed so all players get the same world
+        // In singleplayer: random seed for variety each playthrough
+        if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
+        {
+            // Deterministic seed based on today's date — all players same day = same world
+            System.DateTime today = System.DateTime.UtcNow.Date;
+            seed = today.Year * 10000 + today.Month * 100 + today.Day;
+            Debug.Log($"[WorldGenerator] Multiplayer shared seed: {seed}");
+        }
+        else
+        {
+            seed = Random.Range(1, 999999);
+        }
 
         InitializeWorld(seed);
     }

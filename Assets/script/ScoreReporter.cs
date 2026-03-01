@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Runtime.InteropServices;
 
 public class ScoreReporter : MonoBehaviour
 {
@@ -24,39 +25,49 @@ public class ScoreReporter : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        string token = GetTokenFromUrlOrArgs();
+        ParseUrlParams();
+    }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")] private static extern string GameWSGetUrlParam(string key);
+#endif
+
+    private void ParseUrlParams()
+    {
+#if UNITY_WEBGL && !UNITY_EDITOR
+        // Read URL params directly from JavaScript (reliable inside iframes)
+        string token = GameWSGetUrlParam("token");
         if (!string.IsNullOrEmpty(token))
         {
             authToken = token;
-            Debug.Log($"[ScoreReporter] Auto-Detected Auth Token: {authToken.Substring(0, Mathf.Min(5, authToken.Length))}...");
+            Debug.Log($"[ScoreReporter] Auth Token: {authToken.Substring(0, Mathf.Min(5, authToken.Length))}...");
         }
-    }
 
-    private string GetTokenFromUrlOrArgs()
-    {
-        string url = Application.absoluteURL;
-        if (!string.IsNullOrEmpty(url) && url.Contains("?"))
+        string name = GameWSGetUrlParam("name");
+        if (!string.IsNullOrEmpty(name))
         {
-            var query = System.Web.HttpUtility.ParseQueryString(new System.Uri(url).Query);
-            if (!string.IsNullOrEmpty(query.Get("token"))) return query.Get("token");
-            if (!string.IsNullOrEmpty(query.Get("auth"))) return query.Get("auth");
+            playerName = name;
+            Debug.Log($"[ScoreReporter] Player Name: {playerName}");
         }
-
-        }
-
+#else
+        // Fallback for Editor: command-line args
         string[] args = System.Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
             if ((args[i] == "--auth-token" || args[i] == "-t") && i + 1 < args.Length)
             {
-                return args[i + 1];
+                authToken = args[i + 1];
+            }
+            if (args[i] == "--name" && i + 1 < args.Length)
+            {
+                playerName = args[i + 1];
             }
         }
-
-        return "";
+#endif
     }
 
     public string authToken = "";
+    public string playerName = "Player";
     public string loginUrl = "http://localhost:3000/login";
 
     public void ReportGameOver()
@@ -103,18 +114,12 @@ public class ScoreReporter : MonoBehaviour
 
         Debug.Log($"[ScoreReporter] Posting Score to {url}...");
 
-        Debug.Log($"[ScoreReporter] Posting Score to {url}...");
-
         var request = new UnityEngine.Networking.UnityWebRequest(url, "POST");
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
         request.uploadHandler = new UnityEngine.Networking.UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
         
-        request.downloadHandler = new UnityEngine.Networking.DownloadHandlerBuffer();
-        
         request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("Authorization", "Bearer " + authToken);
-
         request.SetRequestHeader("Authorization", "Bearer " + authToken);
 
         yield return request.SendWebRequest();

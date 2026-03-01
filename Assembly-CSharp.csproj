@@ -67,6 +67,7 @@
     <Compile Include="Assets\Hero Knight - Pixel Art\ColorSwap\ColorSwap_HeroKnight.cs" />
     <Compile Include="Assets\script\CombatSystem.cs" />
     <Compile Include="Assets\script\RemotePlayerController.cs" />
+    <Compile Include="Assets\script\PlayerNameTag.cs" />
     <Compile Include="Assets\script\PlatformAttach.cs" />
     <Compile Include="Assets\script\ScoreManager.cs" />
     <Compile Include="Assets\script\EnemyAttack.cs" />

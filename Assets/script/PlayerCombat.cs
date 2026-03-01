@@ -184,8 +184,6 @@ public class PlayerCombat : MonoBehaviour, IDamageable
     {
         isAttacking = false;
         
-        isAttacking = false;
-        
         if (!Input.GetMouseButton(1))
             isBlocking = false; 
 

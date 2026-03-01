@@ -41,8 +41,6 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
         else
         {
-        else
-        {
             ApplyDamage(damage);
             Debug.Log($"[Multiplayer Demo] Enemy {gameObject.name} took {damage} damage.");
         }
@@ -100,9 +98,10 @@ public class EnemyController : MonoBehaviour, IDamageable
 
     void PlaySound(AudioClip clip)
     {
-        if (clip == null)
+        if (clip != null && audioSource != null)
         {
-        audioSource.PlayOneShot(clip);
-        Debug.Log("🔊 Playing sound: " + clip.name);
+            audioSource.PlayOneShot(clip);
+            Debug.Log("🔊 Playing sound: " + clip.name);
+        }
     }
 }

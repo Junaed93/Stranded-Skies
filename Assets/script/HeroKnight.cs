@@ -36,17 +36,15 @@ public class HeroKnightController : MonoBehaviour
 
         float x = Input.GetAxisRaw("Horizontal");
 
-            rb.linearVelocity = velocity;
+        Vector2 velocity = new Vector2(x * moveSpeed, rb.linearVelocity.y);
+        rb.linearVelocity = velocity;
 
-            if (GameSession.Instance.mode == GameMode.Multiplayer)
+        if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
+        {
+            if (SocketClient.Instance != null && Time.frameCount % 5 == 0)
             {
-               if (SocketClient.Instance != null && Time.frameCount % 5 == 0)
-               {
-                   SocketClient.Instance.SendMove(transform.position.x, transform.position.y, velocity.x, grounded);
-               }
+                SocketClient.Instance.SendMove(transform.position.x, transform.position.y, velocity.x, grounded);
             }
-
-
         }
 
         if (x != 0)

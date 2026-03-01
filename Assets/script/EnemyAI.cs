@@ -138,8 +138,6 @@ public class EnemyAI : MonoBehaviour
         }
 
         float dist = Vector2.Distance(transform.position, player.position);
-        
-        float dist = Vector2.Distance(transform.position, player.position);
 
         if (GameSession.Instance.mode == GameMode.SinglePlayer)
         {

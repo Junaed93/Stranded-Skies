@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class SocketClient : MonoBehaviour
@@ -11,19 +8,18 @@ public class SocketClient : MonoBehaviour
     public static SocketClient Instance { get; private set; }
 
     [Header("Connection Settings")]
-    [Tooltip("WebSocket server URL (e.g., ws://localhost:3000/game)")]
     public string serverUrl = "ws://localhost:8080/game";
 
     [Header("References")]
     public GameObject remotePlayerPrefab;
 
-    private ClientWebSocket _ws;
-    private CancellationTokenSource _cts;
-    
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")] private static extern void GameWSConnect(string url);
+    [DllImport("__Internal")] private static extern void GameWSSend(string msg);
+    [DllImport("__Internal")] private static extern void GameWSClose();
+#endif
 
     private Dictionary<string, RemotePlayerController> remotePlayers = new Dictionary<string, RemotePlayerController>();
-
-    private Queue<string> messageQueue = new Queue<string>();
 
     void Awake()
     {
@@ -34,76 +30,42 @@ public class SocketClient : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // Ensure GameObject is named "SocketClient" so SendMessage from JS can find it
+        gameObject.name = "SocketClient";
     }
 
     void Start()
     {
-        if (GameSession.Instance.mode == GameMode.Multiplayer)
+        if (GameSession.Instance != null && GameSession.Instance.mode == GameMode.Multiplayer)
         {
             Connect();
         }
     }
 
-    public async void Connect()
+    public void Connect()
     {
-        if (_ws != null && _ws.State == WebSocketState.Open) return;
-
-        _ws = new ClientWebSocket();
-        _cts = new CancellationTokenSource();
-
-        try
-        {
-            Debug.Log($"[SocketClient] Connecting to {serverUrl}...");
-            await _ws.ConnectAsync(new Uri(serverUrl), _cts.Token);
-            Debug.Log("[SocketClient] Connected!");
-            
-
-            ReceiveLoop();
-            
-            SendJson(new { type = "JOIN" });
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"[SocketClient] Connection Error: {e.Message}");
-        }
+#if UNITY_WEBGL && !UNITY_EDITOR
+        Debug.Log($"[SocketClient] Connecting to {serverUrl}...");
+        GameWSConnect(serverUrl);
+#else
+        Debug.Log("[SocketClient] WebSocket only works in WebGL builds.");
+#endif
     }
 
-    private async void ReceiveLoop()
+    // Called from JavaScript via SendMessage when WebSocket opens
+    public void OnWSOpen(string unused)
     {
-        var buffer = new byte[1024 * 4];
-
-        while (_ws.State == WebSocketState.Open && !_cts.IsCancellationRequested)
-        {
-            try
-            {
-                var result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), _cts.Token);
-                if (result.MessageType == WebSocketMessageType.Text)
-                {
-                    string msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    lock (messageQueue)
-                    {
-                        messageQueue.Enqueue(msg);
-                    }
-                }
-                else if (result.MessageType == WebSocketMessageType.Close)
-                {
-                    await _ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
-                }
-            }
-            catch (Exception) { break; }
-        }
+        Debug.Log("[SocketClient] Connected! Sending JOIN...");
+#if UNITY_WEBGL && !UNITY_EDITOR
+        GameWSSend("{\"type\":\"JOIN\"}");
+#endif
     }
 
-
+    // Called from JavaScript via SendMessage when a message arrives
+    public void OnWSMessage(string json)
     {
-        lock (messageQueue)
-        {
-            while (messageQueue.Count > 0)
-            {
-                string msg = messageQueue.Dequeue();
-                HandleMessage(msg);
-            }
-        }
+        HandleMessage(json);
     }
 
     [Serializable]
@@ -119,10 +81,10 @@ public class SocketClient : MonoBehaviour
 
     void HandleMessage(string json)
     {
-        try 
+        try
         {
             Packet p = JsonUtility.FromJson<Packet>(json);
-            
+
             if (p.type == "MOVE")
             {
                 if (remotePlayers.ContainsKey(p.id))
@@ -141,20 +103,24 @@ public class SocketClient : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogWarning("Errors parsing msg: " + e.Message);
+            Debug.LogWarning("[SocketClient] Parse error: " + e.Message);
         }
     }
 
     void SpawnRemotePlayer(string id, float x, float y)
     {
-        if (remotePlayerPrefab == null) return;
-        
+        if (remotePlayerPrefab == null)
+        {
+            Debug.LogWarning("[SocketClient] remotePlayerPrefab is null!");
+            return;
+        }
+
         GameObject go = Instantiate(remotePlayerPrefab, new Vector3(x, y, 0), Quaternion.identity);
         go.name = "RemotePlayer_" + id;
 
         RemotePlayerController rpc = go.AddComponent<RemotePlayerController>();
         rpc.playerId = id;
-        
+
         remotePlayers.Add(id, rpc);
         Debug.Log($"[SocketClient] Spawned Remote Player: {id}");
     }
@@ -169,37 +135,25 @@ public class SocketClient : MonoBehaviour
         }
     }
 
-    public async void SendJson(object data)
-    {
-        if (_ws == null || _ws.State != WebSocketState.Open) return;
-
-        if (_ws == null || _ws.State != WebSocketState.Open) return;
-
-        string json = JsonUtility.ToJson(data);
-        
-        // Quick Fix for Anonymous 'JOIN'
-        if (json == "{}") json = "{\"type\":\"JOIN\"}"; 
-
-        byte[] bytes = Encoding.UTF8.GetBytes(json);
-        await _ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
-    }
-    
     public void SendMove(float x, float y, float velX, bool grounded)
     {
-        string json = $"{{\"type\":\"MOVE\",\"x\":{x},\"y\":{y},\"velX\":{velX},\"grounded\":{(grounded?"true":"false")}}}";
-        SendString(json);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        string json = $"{{\"type\":\"MOVE\",\"x\":{x},\"y\":{y},\"velX\":{velX},\"grounded\":{(grounded ? "true" : "false")}}}";
+        GameWSSend(json);
+#endif
     }
-    
-    public async void SendString(string msg)
+
+    public void SendString(string msg)
     {
-        if (_ws == null || _ws.State != WebSocketState.Open) return;
-        byte[] bytes = Encoding.UTF8.GetBytes(msg);
-        await _ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        GameWSSend(msg);
+#endif
     }
 
     void OnDestroy()
     {
-        if (_cts != null) _cts.Cancel();
-        if (_ws != null) _ws.Dispose();
+#if UNITY_WEBGL && !UNITY_EDITOR
+        GameWSClose();
+#endif
     }
 }
